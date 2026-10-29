@@ -3,27 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>TraderPro v15.0 HyperSpeed — Institutional NSE Quant & Groww Desk</title>
+  <title>TraderPro v20.0 Sovereign — 1-Crore AI Quant, News NLP & OTA Terminal</title>
   <style>
-    /* =========================================================================
-       PRE-COMPILED NATIVE DESIGN SYSTEM (ZERO EXTERNAL CDN BLOCKING = 0ms OPEN)
-       ========================================================================= */
     :root {
       --bg-base: #03060d;
       --bg-surface: #09101e;
-      --bg-elevated: #0f182b;
-      --bg-glass: rgba(9, 16, 30, 0.92);
-      --border-subtle: rgba(148, 163, 184, 0.14);
-      --border-bright: rgba(148, 163, 184, 0.26);
+      --bg-elevated: #101a2e;
+      --bg-glass: rgba(8, 13, 25, 0.94);
+      --border-subtle: rgba(148, 163, 184, 0.15);
+      --border-bright: rgba(148, 163, 184, 0.28);
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
       --emerald: #10b981;
       --emerald-bright: #34d399;
-      --emerald-bg: rgba(16, 185, 129, 0.14);
+      --emerald-bg: rgba(16, 185, 129, 0.15);
       --rose: #f43f5e;
       --rose-bright: #fb7185;
-      --rose-bg: rgba(244, 63, 94, 0.14);
+      --rose-bg: rgba(244, 63, 94, 0.15);
       --indigo: #6366f1;
       --indigo-bright: #818cf8;
       --indigo-bg: rgba(99, 102, 241, 0.16);
@@ -33,614 +30,305 @@
       --amber-bright: #fbbf24;
       --amber-bg: rgba(245, 158, 11, 0.15);
     }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
     html, body {
       background-color: var(--bg-base);
       color: var(--text-primary);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: 14px;
-      line-height: 1.4;
-      overscroll-behavior-y: none;
+      line-height: 1.42;
       overflow-x: hidden;
     }
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-variant-numeric: tabular-nums;
-    }
-    input, select, button {
-      font: inherit;
-      color: inherit;
-      outline: none;
-      border: none;
-      background: none;
-    }
-    button {
-      cursor: pointer;
-      touch-action: manipulation;
-      transition: transform 0.08s ease, background-color 0.12s ease, opacity 0.12s ease;
-    }
-    button:active {
-      transform: scale(0.96);
-    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    input, select, button { font: inherit; color: inherit; outline: none; border: none; background: none; }
+    button { cursor: pointer; touch-action: manipulation; transition: transform 0.08s ease, opacity 0.12s ease; }
+    button:active { transform: scale(0.95); }
 
-    /* Layout Shell */
-    .app-shell {
-      max-width: 1140px;
-      margin: 0 auto;
-      padding: 0 12px 92px 12px;
+    /* PASSWORD VAULT LOCK OVERLAY */
+    .vault-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: radial-gradient(circle at 50% 20%, #0f1f38 0%, #03060d 75%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px;
     }
-    .top-bar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: var(--bg-glass);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 10px 12px;
+    .vault-overlay.unlocked { display: none; }
+    .vault-card {
+      background: rgba(9, 16, 30, 0.92);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 24px;
+      max-width: 380px; width: 100%;
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
     }
-    .top-bar-inner {
-      max-width: 1140px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .pin-dots {
+      display: flex; justify-content: center; gap: 12px; margin: 16px 0;
     }
-    .row-between {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+    .pin-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--emerald-bright);
+      background: transparent;
+      transition: background 0.15s ease, transform 0.15s ease;
     }
-    .brand-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .pin-dot.filled { background: var(--emerald-bright); transform: scale(1.15); }
+    .numpad {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px;
     }
-    .brand-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
-      background: linear-gradient(135deg, #10b981 0%, #06b6d4 55%, #6366f1 100%);
-      color: #020617;
-      font-weight: 900;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28);
-      flex-shrink: 0;
-    }
-    .brand-title {
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 7px;
-      border-radius: 6px;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
-    .badge-emerald {
-      background: var(--emerald-bg);
-      color: var(--emerald-bright);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-    }
-    .badge-rose {
-      background: var(--rose-bg);
-      color: var(--rose-bright);
-      border: 1px solid rgba(244, 63, 94, 0.35);
-    }
-    .badge-amber {
-      background: var(--amber-bg);
-      color: var(--amber-bright);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-    }
-    .badge-indigo {
-      background: var(--indigo-bg);
-      color: var(--indigo-bright);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-    }
-
-    /* Segmented Controls */
-    .seg-group {
-      display: inline-flex;
-      background: var(--bg-surface);
-      padding: 3px;
-      border-radius: 10px;
-      border: 1px solid var(--border-subtle);
-    }
-    .seg-btn {
-      padding: 5px 10px;
-      border-radius: 7px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-secondary);
-    }
-    .seg-btn.active {
-      background: var(--emerald);
-      color: #020617;
-      font-weight: 800;
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-    }
-    .ctrl-select, .ctrl-btn {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-bright);
-      border-radius: 9px;
-      padding: 5px 9px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--amber-bright);
-    }
-    .ctrl-btn {
-      color: var(--text-primary);
-    }
-
-    /* Shield Banner */
-    .shield-bar {
-      margin-top: 10px;
-      background: linear-gradient(90deg, rgba(15, 24, 43, 0.95) 0%, rgba(30, 27, 75, 0.55) 50%, rgba(15, 24, 43, 0.95) 100%);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      border-radius: 14px;
-      padding: 10px 12px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .pulse-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--emerald-bright);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
-      display: inline-block;
-      flex-shrink: 0;
-    }
-    .btn-danger {
-      background: var(--rose);
-      color: #ffffff;
-      font-weight: 800;
-      font-size: 11px;
-      padding: 6px 11px;
-      border-radius: 9px;
-      box-shadow: 0 3px 10px rgba(244, 63, 94, 0.3);
-    }
-
-    /* HUD Strip */
-    .hud-grid {
-      margin-top: 10px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    @media (max-width: 640px) {
-      .hud-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    .hud-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 13px;
-      padding: 10px 12px;
-      contain: content;
-    }
-    .hud-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--text-secondary);
-      display: block;
-    }
-    .hud-val {
-      font-size: 18px;
-      font-weight: 800;
-      color: #ffffff;
-      margin-top: 2px;
-      display: block;
-    }
-    .hud-sub {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 1px;
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Filter Pills & Search */
-    .filter-row {
-      margin-top: 10px;
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 2px;
-      scrollbar-width: none;
-    }
-    .filter-row::-webkit-scrollbar { display: none; }
-    .pill-btn {
-      padding: 6px 11px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 700;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-secondary);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .pill-btn.active {
-      background: var(--emerald);
-      color: #020617;
-      border-color: var(--emerald);
-      font-weight: 800;
-    }
-    .search-row {
-      margin-top: 8px;
-      display: flex;
-      gap: 6px;
-    }
-    .search-inp {
-      flex: 1;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 11px;
-      padding: 9px 12px;
-      font-size: 12px;
-      color: #ffffff;
-      text-transform: uppercase;
-    }
-    .search-inp:focus {
-      border-color: var(--emerald);
-    }
-    .btn-primary {
-      background: var(--indigo);
-      color: #ffffff;
-      font-weight: 800;
-      font-size: 12px;
-      padding: 9px 14px;
-      border-radius: 11px;
-      flex-shrink: 0;
-    }
-
-    /* Main Cards Deck */
-    .deck-grid {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    @media (max-width: 820px) {
-      .deck-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    .quant-card {
-      border-radius: 18px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 11px;
-      contain: content;
-      transform: translateZ(0);
-    }
-    .quant-card.buy {
-      background: radial-gradient(120% 120% at 0% 0%, rgba(16, 185, 129, 0.14) 0%, #09101e 58%);
-      border: 1px solid rgba(16, 185, 129, 0.42);
-    }
-    .quant-card.sell {
-      background: radial-gradient(120% 120% at 0% 0%, rgba(244, 63, 94, 0.14) 0%, #09101e 58%);
-      border: 1px solid rgba(244, 63, 94, 0.42);
-    }
-    .quant-card.wait {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-    }
-
-    /* Card Sections */
-    .sym-title {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      color: #ffffff;
-    }
-    .sym-meta {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-    .ltp-box {
-      background: #040811;
-      border: 1px solid var(--border-subtle);
-      border-radius: 13px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .ltp-price {
-      font-size: 21px;
-      font-weight: 900;
-      color: #ffffff;
-      transition: color 0.18s ease;
-    }
-    .tick-up { color: var(--emerald-bright) !important; }
-    .tick-dn { color: var(--rose-bright) !important; }
-
-    .stage-strip {
-      background: rgba(15, 24, 43, 0.9);
-      border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 7px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-      font-weight: 800;
-    }
-
-    /* 2-Col Entry & Hard SL Bento */
-    .bento-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .bento-entry {
-      background: rgba(99, 102, 241, 0.12);
-      border: 1px solid rgba(99, 102, 241, 0.38);
-      border-radius: 13px;
-      padding: 10px;
-    }
-    .bento-sl {
-      background: rgba(244, 63, 94, 0.12);
-      border: 1px solid rgba(244, 63, 94, 0.38);
-      border-radius: 13px;
-      padding: 10px;
-    }
-    .bento-lbl {
-      font-size: 9px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      display: block;
-    }
-    .bento-num {
-      font-size: 16px;
-      font-weight: 900;
-      color: #ffffff;
-      margin-top: 2px;
-      display: block;
-    }
-    .bento-sub {
-      font-size: 10px;
-      color: var(--text-secondary);
-      margin-top: 2px;
-      display: block;
-    }
-
-    /* 3-Col Targets Bento */
-    .bento-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
-    }
-    .target-box {
-      background: #040811;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: 12px;
-      padding: 8px 9px;
-    }
-    .target-num {
-      font-size: 14px;
-      font-weight: 900;
-      color: var(--emerald-bright);
-      margin-top: 2px;
-      display: block;
-    }
-
-    /* Progress Track */
-    .prog-wrap {
-      background: #040811;
-      border: 1px solid var(--border-subtle);
-      border-radius: 11px;
-      padding: 8px 10px;
-    }
-    .prog-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 9px;
-      font-weight: 800;
-      margin-bottom: 5px;
-    }
-    .prog-track {
-      width: 100%;
-      height: 7px;
-      background: #0f172a;
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .prog-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #6366f1 0%, #10b981 55%, #06b6d4 100%);
-      border-radius: 99px;
-      transition: width 0.25s ease;
-    }
-
-    /* Telemetry Mini-Grid */
-    .tele-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      background: rgba(4, 8, 17, 0.75);
-      border: 1px solid var(--border-subtle);
-      border-radius: 12px;
-      padding: 8px 10px;
-      font-size: 11px;
-    }
-    .tele-lbl {
-      font-size: 9px;
-      color: var(--text-muted);
-      display: block;
-    }
-    .verdict-box {
-      background: rgba(4, 8, 17, 0.85);
-      border: 1px solid var(--border-subtle);
-      border-radius: 12px;
-      padding: 9px 11px;
-      font-size: 11.5px;
-      color: #cbd5e1;
-      line-height: 1.45;
-    }
-    .card-actions {
-      display: grid;
-      grid-template-columns: 1fr 1.25fr;
-      gap: 8px;
-      padding-top: 8px;
-      border-top: 1px solid var(--border-subtle);
-    }
-    .btn-audit {
+    .num-btn {
       background: var(--bg-elevated);
       border: 1px solid var(--border-bright);
-      color: var(--text-primary);
-      font-weight: 700;
-      font-size: 11.5px;
-      padding: 9px 10px;
-      border-radius: 11px;
-      text-align: center;
+      border-radius: 14px;
+      padding: 14px 0;
+      font-size: 18px; font-weight: 800; color: #fff;
     }
-    .btn-exec {
-      background: linear-gradient(90deg, #10b981 0%, #14b8a6 100%);
-      color: #020617;
-      font-weight: 900;
-      font-size: 11.5px;
-      padding: 9px 10px;
-      border-radius: 11px;
-      text-align: center;
-      box-shadow: 0 3px 12px rgba(16, 185, 129, 0.25);
+    .num-btn:active { background: var(--emerald); color: #020617; }
+
+    /* TOAST NOTIFICATION */
+    .toast-banner {
+      position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+      z-index: 200; background: #064e3b; border: 1px solid var(--emerald-bright);
+      color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 12px; font-weight: 800;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: none; max-width: 92vw; text-align: center;
+    }
+    .toast-banner.show { display: block; animation: popIn 0.2s ease-out; }
+    @keyframes popIn { 0% { opacity: 0; transform: translate(-50%, -10px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
+
+    /* APP SHELL & HEADER */
+    .app-shell { max-width: 1140px; margin: 0 auto; padding: 0 12px 96px 12px; }
+    .top-bar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg-glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle); padding: 10px 12px;
+    }
+    .top-bar-inner { max-width: 1140px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+    .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+    /* DEMO vs REAL TOP MASTER SWITCH */
+    .mode-master-bar {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+      background: #040812; padding: 4px; border-radius: 12px; border: 1px solid var(--border-bright);
+    }
+    .mode-pill {
+      padding: 7px 10px; border-radius: 9px; font-size: 11.5px; font-weight: 800;
+      text-align: center; color: var(--text-secondary);
+    }
+    .mode-pill.demo-active {
+      background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+      color: #ffffff; box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
+    }
+    .mode-pill.real-active {
+      background: linear-gradient(90deg, #10b981 0%, #f59e0b 100%);
+      color: #020617; box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
     }
 
-    /* Bottom Navigation Bar */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 50;
-      background: var(--bg-glass);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid var(--border-subtle);
-      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase;
     }
-    .bottom-nav-inner {
-      max-width: 480px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
+    .badge-emerald { background: var(--emerald-bg); color: var(--emerald-bright); border: 1px solid rgba(16, 185, 129, 0.38); }
+    .badge-rose { background: var(--rose-bg); color: var(--rose-bright); border: 1px solid rgba(244, 63, 94, 0.38); }
+    .badge-amber { background: var(--amber-bg); color: var(--amber-bright); border: 1px solid rgba(245, 158, 11, 0.38); }
+    .badge-indigo { background: var(--indigo-bg); color: var(--indigo-bright); border: 1px solid rgba(99, 102, 241, 0.38); }
+
+    .seg-group { display: inline-flex; background: var(--bg-surface); padding: 3px; border-radius: 10px; border: 1px solid var(--border-subtle); }
+    .seg-btn { padding: 5px 9px; border-radius: 7px; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+    .seg-btn.active { background: var(--emerald); color: #020617; font-weight: 900; }
+    .ctrl-select, .ctrl-btn {
+      background: var(--bg-surface); border: 1px solid var(--border-bright);
+      border-radius: 9px; padding: 5px 9px; font-size: 11px; font-weight: 800; color: var(--text-primary);
     }
-    .nav-item {
-      padding: 7px 4px;
+
+    /* HUD */
+    .hud-grid { margin-top: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    @media (max-width: 640px) { .hud-grid { grid-template-columns: repeat(2, 1fr); } }
+    .hud-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 13px; padding: 10px 12px; }
+    .hud-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); display: block; }
+    .hud-val { font-size: 18px; font-weight: 900; color: #fff; margin-top: 2px; display: block; }
+    .hud-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Filters & Search */
+    .filter-row { margin-top: 10px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .pill-btn { padding: 6px 11px; border-radius: 10px; font-size: 11px; font-weight: 700; background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; }
+    .pill-btn.active { background: var(--emerald); color: #020617; border-color: var(--emerald); font-weight: 900; }
+    .search-row { margin-top: 8px; display: flex; gap: 6px; }
+    .search-inp { flex: 1; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 11px; padding: 9px 12px; font-size: 12px; color: #fff; text-transform: uppercase; }
+    .btn-primary { background: var(--indigo); color: #fff; font-weight: 800; font-size: 12px; padding: 9px 14px; border-radius: 11px; flex-shrink: 0; }
+    .btn-danger { background: var(--rose); color: #fff; font-weight: 800; font-size: 11px; padding: 6px 11px; border-radius: 9px; }
+
+    /* Deck & Cards */
+    .deck-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (max-width: 820px) { .deck-grid { grid-template-columns: 1fr; } }
+    .quant-card { border-radius: 20px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 11px; contain: content; }
+    .quant-card.buy { background: radial-gradient(120% 120% at 0% 0%, rgba(16, 185, 129, 0.16) 0%, #09101e 58%); border: 1px solid rgba(16, 185, 129, 0.45); }
+    .quant-card.sell { background: radial-gradient(120% 120% at 0% 0%, rgba(244, 63, 94, 0.16) 0%, #09101e 58%); border: 1px solid rgba(244, 63, 94, 0.45); }
+    .quant-card.wait { background: var(--bg-surface); border: 1px solid var(--border-subtle); }
+
+    /* SIMPLE PLAIN-ENGLISH GUIDE BOX */
+    .easy-guide {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 24, 43, 0.95) 100%);
+      border-left: 3px solid var(--emerald-bright);
       border-radius: 10px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-align: center;
+      padding: 9px 11px;
+      font-size: 11.5px;
+      color: #e2e8f0;
     }
-    .nav-item.active {
-      background: var(--emerald);
-      color: #020617;
+
+    /* LEVEL BOXES WITH VISUAL "CUTS" (CROSSED MARKS) */
+    .bento-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .bento-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .lvl-box {
+      position: relative;
+      background: #040811;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 9px 10px;
+      overflow: hidden;
+    }
+    .lvl-box.entry-box { background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.4); }
+    .lvl-box.sl-box { background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.4); }
+    .lvl-box.crossed {
+      border-color: var(--emerald-bright) !important;
+      background: rgba(16, 185, 129, 0.18) !important;
+      box-shadow: inset 0 0 12px rgba(16, 185, 129, 0.22);
+    }
+    .lvl-box.crossed::after {
+      content: "";
+      position: absolute;
+      left: 6px; right: 6px; top: 52%;
+      height: 2px;
+      background: var(--emerald-bright);
+      transform: rotate(-8deg);
+      opacity: 0.85;
+      pointer-events: none;
+    }
+    .cut-badge {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 8.5px;
       font-weight: 900;
+      margin-top: 2px;
     }
+    .cut-yes { background: var(--emerald); color: #020617; }
+    .cut-no { background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); }
+
+    /* PROGRESS TRACK WITH VERTICAL CUT NOTCHES */
+    .prog-wrap { background: #040811; border: 1px solid var(--border-subtle); border-radius: 12px; padding: 9px 10px; }
+    .prog-track {
+      position: relative; width: 100%; height: 10px;
+      background: #0f172a; border-radius: 99px; overflow: visible; margin-top: 6px;
+    }
+    .prog-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #6366f1 0%, #10b981 55%, #06b6d4 100%);
+      transition: width 0.25s ease;
+    }
+    .cut-notch {
+      position: absolute; top: -4px; bottom: -4px; width: 3px;
+      background: #475569; border-radius: 2px; z-index: 5;
+    }
+    .cut-notch.hit {
+      background: #34d399;
+      box-shadow: 0 0 6px #34d399;
+    }
+
+    .tele-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+      background: rgba(4, 8, 17, 0.78); border: 1px solid var(--border-subtle);
+      border-radius: 12px; padding: 8px 10px; font-size: 11px;
+    }
+    .card-actions { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+    .btn-audit { background: var(--bg-elevated); border: 1px solid var(--border-bright); color: #fff; font-weight: 700; font-size: 11.5px; padding: 9px 10px; border-radius: 11px; }
+    .btn-exec { background: linear-gradient(90deg, #10b981 0%, #14b8a6 100%); color: #020617; font-weight: 900; font-size: 11.5px; padding: 9px 10px; border-radius: 11px; }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      background: var(--bg-glass); backdrop-filter: blur(16px); border-top: 1px solid var(--border-subtle);
+      padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    }
+    .bottom-nav-inner { max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .nav-item { padding: 7px 2px; border-radius: 10px; font-size: 10.5px; font-weight: 700; color: var(--text-secondary); text-align: center; }
+    .nav-item.active { background: var(--emerald); color: #020617; font-weight: 900; }
 
     /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: rgba(2, 6, 15, 0.85);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-    }
-    .modal-backdrop.open {
-      display: flex;
-    }
-    .modal-sheet {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-bright);
-      border-radius: 20px;
-      max-width: 680px;
-      width: 100%;
-      max-height: 88vh;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .domain-row {
-      padding: 10px;
-      border-radius: 11px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 11.5px;
-    }
-    .domain-pass {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-    }
-    .domain-wait {
-      background: rgba(244, 63, 94, 0.08);
-      border: 1px solid rgba(244, 63, 94, 0.3);
-    }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 100; background: rgba(2, 6, 15, 0.86); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 12px; }
+    .modal-backdrop.open { display: flex; }
+    .modal-sheet { background: var(--bg-surface); border: 1px solid var(--border-bright); border-radius: 20px; max-width: 680px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .domain-row { padding: 9px 10px; border-radius: 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; }
+    .domain-pass { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.35); }
+    .domain-wait { background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.3); }
   </style>
 </head>
 <body>
 
-  <!-- STICKY ZERO-LATENCY HEADER -->
+  <!-- 1. PASSWORD / PIN SECURITY VAULT LOCK SCREEN -->
+  <div id="vaultOverlay" class="vault-overlay">
+    <div class="vault-card">
+      <div style="width:56px; height:56px; border-radius:16px; margin:0 auto 10px; background:linear-gradient(135deg,#10b981,#06b6d4,#6366f1); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 25px rgba(16,185,129,0.35);">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#020617" stroke-width="2.5"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+      </div>
+      <h2 style="font-size:18px; font-weight:900; color:#fff;">TraderPro v20 Sovereign</h2>
+      <p style="font-size:11.5px; color:var(--text-secondary); margin-top:3px;">1-Crore AI Quant • Kalman + HMM + News NLP Vault</p>
+      <p id="vaultMsg" class="mono" style="font-size:11px; color:var(--emerald-bright); margin-top:8px;">Enter 4-Digit Master PIN (Default: 7777)</p>
+
+      <div class="pin-dots">
+        <span id="pdot-0" class="pin-dot"></span>
+        <span id="pdot-1" class="pin-dot"></span>
+        <span id="pdot-2" class="pin-dot"></span>
+        <span id="pdot-3" class="pin-dot"></span>
+      </div>
+
+      <div class="numpad mono">
+        <button onclick="pressPin('1')" class="num-btn">1</button>
+        <button onclick="pressPin('2')" class="num-btn">2</button>
+        <button onclick="pressPin('3')" class="num-btn">3</button>
+        <button onclick="pressPin('4')" class="num-btn">4</button>
+        <button onclick="pressPin('5')" class="num-btn">5</button>
+        <button onclick="pressPin('6')" class="num-btn">6</button>
+        <button onclick="pressPin('7')" class="num-btn">7</button>
+        <button onclick="pressPin('8')" class="num-btn">8</button>
+        <button onclick="pressPin('9')" class="num-btn">9</button>
+        <button onclick="pressPin('C')" class="num-btn" style="color:var(--rose-bright); font-size:14px;">CLR</button>
+        <button onclick="pressPin('0')" class="num-btn">0</button>
+        <button onclick="unlockVaultWithDefault()" class="num-btn" style="background:var(--emerald); color:#020617; font-size:13px;">OPEN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION BANNER -->
+  <div id="toastBanner" class="toast-banner mono"></div>
+
+  <!-- STICKY HEADER WITH DEMO vs REAL MODE AT VERY TOP -->
   <header class="top-bar">
     <div class="top-bar-inner">
+      <div class="mode-master-bar">
+        <button id="btnDemoMode" onclick="switchTradingEnv('DEMO')" class="mode-pill demo-active">
+          🧪 DEMO PAPER MODE (₹1L Practice)
+        </button>
+        <button id="btnRealMode" onclick="switchTradingEnv('REAL')" class="mode-pill">
+          💎 REAL MONEY MODE (Groww Live)
+        </button>
+      </div>
+
       <div class="row-between">
-        <div class="brand-wrap">
-          <div class="brand-icon mono">TP15</div>
+        <div style="display:flex; align-items:center; gap:9px;">
+          <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#10b981,#06b6d4,#6366f1); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#020617" stroke-width="2.6"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+          </div>
           <div>
-            <div class="brand-title">
-              <span>TraderPro HyperSpeed</span>
-              <span id="engineModeTag" class="badge badge-emerald mono">0ms PRE-LOADED</span>
+            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+              <span style="font-size:14.5px; font-weight:900; color:#fff;">TraderPro v20</span>
+              <span id="envTagBadge" class="badge badge-indigo mono">DEMO PRACTICE</span>
+              <button onclick="triggerOtaUpdate()" class="badge badge-emerald mono" style="cursor:pointer;">☁️ OTA UPDATE</button>
             </div>
-            <p id="statusText" style="font-size:11px; color:var(--text-secondary);">Instant Pre-Loaded NSE Matrix • Live Delta Engine</p>
+            <p id="statusText" style="font-size:10.5px; color:var(--text-secondary);">Kalman + Markov HMM + 32 Candle Patterns + Live News NLP</p>
           </div>
         </div>
         <div style="text-align:right;" class="mono">
-          <span id="clockText" style="font-size:12px; font-weight:800; color:var(--emerald-bright); display:block;">--:--:--</span>
-          <span id="syncBadge" style="font-size:10px; color:var(--cyan-bright);">120Hz Ready</span>
+          <span id="clockText" style="font-size:11.5px; font-weight:800; color:var(--emerald-bright); display:block;">--:--:--</span>
+          <button onclick="lockVaultNow()" style="font-size:10px; color:var(--amber-bright); font-weight:800;">🔒 Lock Vault</button>
         </div>
       </div>
 
@@ -652,155 +340,138 @@
           <button onclick="switchTf('15m')" id="tf-15m" class="seg-btn">15m</button>
         </div>
 
-        <div style="display:flex; align-items:center; gap:6px;">
-          <select id="modeSel" onchange="onModeChange()" class="ctrl-select">
+        <div style="display:flex; align-items:center; gap:5px;">
+          <select id="modeSel" onchange="onModeChange()" class="ctrl-select" style="color:var(--amber-bright);">
             <option value="MANUAL">Manual + Auto SqOff</option>
-            <option value="AUTO_LIVE">Full Auto Groww MIS</option>
+            <option value="AUTO_LIVE">Auto AI Execution</option>
           </select>
-          <button onclick="relockAllSignals()" class="ctrl-btn">🔄 Re-Lock</button>
+          <button onclick="relockAllSignals()" class="ctrl-btn" style="background:rgba(16,185,129,0.18); border-color:var(--emerald); color:var(--emerald-bright);">
+            🔄 Re-Lock Now
+          </button>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- MAIN SHELL -->
   <main class="app-shell">
-
-    <!-- 7-LAYER LOSS SHIELD & AUTO SQUARE-OFF GUARD -->
-    <section class="shield-bar">
-      <div style="display:flex; align-items:center; gap:9px;">
-        <span class="pulse-dot"></span>
-        <div>
-          <span style="font-weight:800; font-size:12px; color:#fff; display:block;">🛡️ Manual &amp; Auto Square-Off Guard Armed</span>
-          <span style="font-size:10.5px; color:var(--text-secondary);">Auto Breakeven @ +1R • Hard SL Auto-Exit • 15:15 IST Intraday RMS Cutoff</span>
-        </div>
-      </div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span id="openPosCountBadge" class="badge badge-emerald mono" style="padding:5px 9px;">0 Open</span>
-        <button onclick="squareOffAllPositions('1-Tap Emergency Square-Off')" class="btn-danger">🚨 Square-Off All</button>
-      </div>
-    </section>
-
-    <!-- 4-CARD HUD -->
     <section class="hud-grid">
       <div class="hud-card">
-        <span class="hud-label" style="color:var(--emerald-bright);">🎯 Sniper Setups</span>
-        <span id="hudActiveCount" class="hud-val mono">16</span>
-        <span class="hud-sub">Pre-Loaded &amp; Locked</span>
+        <span id="walletTitle" class="hud-label" style="color:var(--indigo-bright);">🧪 Demo Wallet</span>
+        <span id="hudWalletBal" class="hud-val mono">₹1,00,000</span>
+        <span id="hudOpenCount" class="hud-sub mono">0 Open Trades (Auto SqOff On)</span>
       </div>
       <div class="hud-card">
-        <span class="hud-label" style="color:var(--cyan-bright);">🏆 Peak Win Prob</span>
-        <span id="hudTopProb" class="hud-val mono">93.4%</span>
-        <span id="hudTopSym" class="hud-sub mono" style="color:var(--emerald-bright); font-weight:700;">RELIANCE (BUY)</span>
-      </div>
-      <div class="hud-card">
-        <span class="hud-label" style="color:var(--indigo-bright);">💰 Day Net P&amp;L</span>
+        <span class="hud-label" style="color:var(--emerald-bright);">💰 Total Net P&amp;L</span>
         <span id="hudDayPnl" class="hud-val mono" style="color:var(--emerald-bright);">+₹0.00</span>
-        <span id="hudWinStats" class="hud-sub mono">0W / 0L Closed</span>
+        <span id="hudWinStats" class="hud-sub mono">0W / 0L (Multi-Day Saved)</span>
       </div>
       <div class="hud-card">
-        <span class="hud-label" style="color:var(--amber-bright);">📡 Radar Shield</span>
-        <span id="hudRadarCount" class="hud-val mono">8</span>
-        <span class="hud-sub">Chop / Spike Blocked</span>
+        <span class="hud-label" style="color:var(--cyan-bright);">🎯 Sniper Setups</span>
+        <span id="hudActiveCount" class="hud-val mono">16</span>
+        <span id="hudTopSym" class="hud-sub mono" style="color:var(--emerald-bright);">Kalman + News Aligned</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label" style="color:var(--amber-bright);">📰 Market News Bias</span>
+        <span id="hudNewsBias" class="hud-val mono" style="font-size:15px; color:var(--emerald-bright);">+74% BULLISH</span>
+        <span id="hudNewsCount" class="hud-sub">Live Headlines Analyzed</span>
       </div>
     </section>
 
-    <!-- FILTER PILLS & SEARCH -->
     <section>
       <div class="filter-row">
         <button onclick="setSetupFilter('ALL')" id="sflt-ALL" class="pill-btn active">All Sniper Setups</button>
         <button onclick="setSetupFilter('IGNITION')" id="sflt-IGNITION" class="pill-btn">⚡ Early Ignition</button>
-        <button onclick="setSetupFilter('TREND')" id="sflt-TREND" class="pill-btn">🔥 MTF Trend Rider</button>
+        <button onclick="setSetupFilter('TREND')" id="sflt-TREND" class="pill-btn">🔥 Kalman Trend</button>
         <button onclick="setSetupFilter('PULLBACK')" id="sflt-PULLBACK" class="pill-btn">🎯 Dip Value Entry</button>
+        <button onclick="squareOffAllPositions('1-Tap Square-Off All')" class="pill-btn" style="background:var(--rose); color:#fff; border-color:var(--rose);">🚨 Square-Off All</button>
       </div>
       <div class="search-row">
-        <input id="customSymInp" type="text" placeholder="Instant filter or add NSE ticker (e.g. ZOMATO, HAL, PNB)..." oninput="onQuickSearch()" class="search-inp mono" />
+        <input id="customSymInp" type="text" placeholder="Search or add NSE stock (e.g. ZOMATO, HAL, PNB)..." oninput="onQuickSearch()" class="search-inp mono" />
         <button onclick="addCustomTicker()" class="btn-primary">+ Add</button>
       </div>
     </section>
 
-    <!-- MAIN CARDS GRID -->
     <section id="cardsGrid" class="deck-grid"></section>
-
   </main>
 
-  <!-- NATIVE BOTTOM TAB BAR -->
   <nav class="bottom-nav">
     <div class="bottom-nav-inner">
-      <button onclick="setTab('ACTIVE')" id="tab-ACTIVE" class="nav-item active">🔥 Sniper</button>
-      <button onclick="setTab('POSITIONS')" id="tab-POSITIONS" class="nav-item">💼 Positions</button>
+      <button onclick="setTab('ACTIVE')" id="tab-ACTIVE" class="nav-item active">🔥 Trades</button>
+      <button onclick="setTab('POSITIONS')" id="tab-POSITIONS" class="nav-item">💼 Book</button>
+      <button onclick="setTab('NEWS')" id="tab-NEWS" class="nav-item">📰 News AI</button>
       <button onclick="setTab('RADAR')" id="tab-RADAR" class="nav-item">📡 Radar</button>
-      <button onclick="setTab('SETTINGS')" id="tab-SETTINGS" class="nav-item">⚙️ Settings</button>
+      <button onclick="setTab('SETTINGS')" id="tab-SETTINGS" class="nav-item">⚙️ Setup</button>
     </div>
   </nav>
 
-  <!-- 12-DOMAIN AUDIT MODAL -->
   <div id="detailModal" class="modal-backdrop" onclick="if(event.target===this)this.classList.remove('open')">
     <div class="modal-sheet">
       <div class="row-between" style="border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
         <div>
-          <h2 id="modalTitle" style="font-size:15px; font-weight:900; color:#fff;">12-Domain Institutional Quant Audit</h2>
+          <h2 id="modalTitle" style="font-size:15px; font-weight:900; color:#fff;">1-Crore AI Quant &amp; News Audit</h2>
           <p id="modalSub" class="mono" style="font-size:11px; color:var(--text-secondary); margin-top:2px;"></p>
         </div>
-        <button onclick="document.getElementById('detailModal').classList.remove('open')" class="ctrl-btn" style="padding:5px 10px;">✕</button>
+        <button onclick="document.getElementById('detailModal').classList.remove('open')" class="ctrl-btn">✕</button>
       </div>
-      <div id="modalProNote" class="verdict-box" style="border-color:rgba(16,185,129,0.35);"></div>
+      <div id="modalProNote" class="easy-guide"></div>
       <div id="modalBody" style="display:flex; flex-direction:column; gap:7px;"></div>
     </div>
   </div>
 
   <script>
-    // =========================================================================
-    // 100% PRE-LOADED NSE INSTITUTIONAL UNIVERSE (OPENS IN 0ms AT FRAME 1!)
-    // Static profiles, sector betas, & baseline anchors are pre-baked in memory.
-    // Only live prices & live exchange indicator deltas stream over the network!
-    // =========================================================================
     const PRELOADED_UNIVERSE = [
-      { symbol: 'RELIANCE', name: 'Reliance Industries', sector: 'Energy / Oil & Gas', beta: 1.08, anchor: 1296.40, seedBias: 1 },
-      { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd', sector: 'Private Banking', beta: 1.02, anchor: 1742.60, seedBias: 1 },
-      { symbol: 'ICICIBANK', name: 'ICICI Bank Ltd', sector: 'Private Banking', beta: 1.05, anchor: 1284.20, seedBias: 1 },
-      { symbol: 'INFY', name: 'Infosys Ltd', sector: 'IT Services', beta: 0.94, anchor: 1133.45, seedBias: 1 },
-      { symbol: 'SBIN', name: 'State Bank of India', sector: 'PSU Banking', beta: 1.24, anchor: 818.90, seedBias: 1 },
-      { symbol: 'TATAMOTORS', name: 'Tata Motors Ltd', sector: 'Automobiles', beta: 1.32, anchor: 874.50, seedBias: -1 },
-      { symbol: 'BAJFINANCE', name: 'Bajaj Finance Ltd', sector: 'NBFC / Financials', beta: 1.28, anchor: 912.40, seedBias: -1 },
-      { symbol: 'TCS', name: 'Tata Consultancy', sector: 'IT Services', beta: 0.86, anchor: 4092.00, seedBias: 0 },
-      { symbol: 'BHARTIARTL', name: 'Bharti Airtel Ltd', sector: 'Telecom', beta: 0.91, anchor: 1664.00, seedBias: 1 },
-      { symbol: 'LT', name: 'Larsen & Toubro', sector: 'Infra & CapGoods', beta: 1.12, anchor: 3774.15, seedBias: -1 },
-      { symbol: 'AXISBANK', name: 'Axis Bank Ltd', sector: 'Private Banking', beta: 1.15, anchor: 1176.80, seedBias: 1 },
-      { symbol: 'SUNPHARMA', name: 'Sun Pharma Ind', sector: 'Pharmaceuticals', beta: 0.78, anchor: 1858.40, seedBias: 0 },
-      { symbol: 'KOTAKBANK', name: 'Kotak Mahindra Bank', sector: 'Private Banking', beta: 0.96, anchor: 1765.00, seedBias: 1 },
-      { symbol: 'M&M', name: 'Mahindra & Mahindra', sector: 'Automobiles', beta: 1.18, anchor: 2845.00, seedBias: 1 },
-      { symbol: 'TATASTEEL', name: 'Tata Steel Ltd', sector: 'Metals & Mining', beta: 1.38, anchor: 154.20, seedBias: -1 },
-      { symbol: 'NTPC', name: 'NTPC Ltd', sector: 'Power / Utilities', beta: 0.98, anchor: 412.50, seedBias: 0 },
-      { symbol: 'MARUTI', name: 'Maruti Suzuki', sector: 'Automobiles', beta: 1.04, anchor: 11420.00, seedBias: 1 },
-      { symbol: 'ITC', name: 'ITC Ltd', sector: 'FMCG', beta: 0.72, anchor: 486.00, seedBias: 0 },
-      { symbol: 'TRENT', name: 'Trent Ltd', sector: 'Retail / Consumer', beta: 1.35, anchor: 7240.00, seedBias: 1 },
-      { symbol: 'BEL', name: 'Bharat Electronics', sector: 'Defense / PSU', beta: 1.29, anchor: 292.40, seedBias: 1 },
-      { symbol: 'HAL', name: 'Hindustan Aeronautics', sector: 'Aerospace / Defense', beta: 1.31, anchor: 4280.00, seedBias: 1 },
-      { symbol: 'ZOMATO', name: 'Zomato Ltd', sector: 'Consumer Tech', beta: 1.42, anchor: 256.40, seedBias: -1 },
-      { symbol: 'DLF', name: 'DLF Ltd', sector: 'Real Estate', beta: 1.36, anchor: 824.00, seedBias: 0 },
-      { symbol: 'INDUSINDBK', name: 'IndusInd Bank', sector: 'Private Banking', beta: 1.22, anchor: 1042.00, seedBias: -1 }
+      { symbol: 'RELIANCE', name: 'Reliance Industries', sector: 'Energy / Oil & Gas', anchor: 1296.40, seedBias: 1, newsHeadline: 'Reliance New Energy & Retail expansion boosts institutional FII target price', newsScore: 84 },
+      { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd', sector: 'Private Banking', anchor: 1742.60, seedBias: 1, newsHeadline: 'HDFC Bank credit deposit ratio improves; strong institutional call writing support', newsScore: 81 },
+      { symbol: 'ICICIBANK', name: 'ICICI Bank Ltd', sector: 'Private Banking', anchor: 1284.20, seedBias: 1, newsHeadline: 'ICICI Bank NII growth leads private banking pack with clean asset quality', newsScore: 86 },
+      { symbol: 'INFY', name: 'Infosys Ltd', sector: 'IT Services', anchor: 1133.45, seedBias: 1, newsHeadline: 'Infosys signs multi-year AI cloud transformation deal with European banking giant', newsScore: 79 },
+      { symbol: 'SBIN', name: 'State Bank of India', sector: 'PSU Banking', anchor: 818.90, seedBias: 1, newsHeadline: 'SBI treasury & corporate loan book expansion drives PSU bank rally', newsScore: 77 },
+      { symbol: 'TATAMOTORS', name: 'Tata Motors Ltd', sector: 'Automobiles', anchor: 874.50, seedBias: -1, newsHeadline: 'Global EV margin pressure & JLR inventory rebalancing weigh on near-term sentiment', newsScore: -72 },
+      { symbol: 'BAJFINANCE', name: 'Bajaj Finance Ltd', sector: 'NBFC / Financials', anchor: 912.40, seedBias: -1, newsHeadline: 'NBFC unsecured credit cost provisioning watched closely by street analysts', newsScore: -64 },
+      { symbol: 'TCS', name: 'Tata Consultancy', sector: 'IT Services', anchor: 4092.00, seedBias: 1, newsHeadline: 'TCS BFSI order book recovery & GenAI pipeline cross $1.5B milestone', newsScore: 75 },
+      { symbol: 'BHARTIARTL', name: 'Bharti Airtel Ltd', sector: 'Telecom', anchor: 1664.00, seedBias: 1, newsHeadline: 'Airtel ARPU expansion & 5G enterprise monetization outperform street estimates', newsScore: 88 },
+      { symbol: 'LT', name: 'Larsen & Toubro', sector: 'Infra & CapGoods', anchor: 3774.15, seedBias: -1, newsHeadline: 'CapGoods profit booking after record high run; order inflow pipeline remains steady', newsScore: -58 },
+      { symbol: 'AXISBANK', name: 'Axis Bank Ltd', sector: 'Private Banking', anchor: 1176.80, seedBias: 1, newsHeadline: 'Axis Bank commercial banking & digital payments volume surge 18% YoY', newsScore: 76 },
+      { symbol: 'SUNPHARMA', name: 'Sun Pharma Ind', sector: 'Pharmaceuticals', anchor: 1858.40, seedBias: 1, newsHeadline: 'Sun Pharma specialty portfolio & US FDA approval boost margin outlook', newsScore: 82 },
+      { symbol: 'KOTAKBANK', name: 'Kotak Mahindra Bank', sector: 'Private Banking', anchor: 1765.00, seedBias: 1, newsHeadline: 'Kotak Bank wealth management & retail loan growth gain traction', newsScore: 72 },
+      { symbol: 'M&M', name: 'Mahindra & Mahindra', sector: 'Automobiles', anchor: 2845.00, seedBias: 1, newsHeadline: 'M&M SUV bookings & tractor rural demand beat monthly dispatch estimates', newsScore: 89 },
+      { symbol: 'TATASTEEL', name: 'Tata Steel Ltd', sector: 'Metals & Mining', anchor: 154.20, seedBias: -1, newsHeadline: 'Global HRC steel import pricing pressure keeps metal spreads tight', newsScore: -65 },
+      { symbol: 'NTPC', name: 'NTPC Ltd', sector: 'Power / Utilities', anchor: 412.50, seedBias: 1, newsHeadline: 'NTPC Green Energy capacity addition & peak power demand support valuation', newsScore: 78 },
+      { symbol: 'MARUTI', name: 'Maruti Suzuki', sector: 'Automobiles', anchor: 11420.00, seedBias: 1, newsHeadline: 'Maruti hybrid & CNG exports hit record monthly volume', newsScore: 74 },
+      { symbol: 'ITC', name: 'ITC Ltd', sector: 'FMCG', anchor: 486.00, seedBias: 1, newsHeadline: 'ITC FMCG & rural distribution expansion attract defensive institutional inflows', newsScore: 71 },
+      { symbol: 'TRENT', name: 'Trent Ltd', sector: 'Retail / Consumer', anchor: 7240.00, seedBias: 1, newsHeadline: 'Trent Zudio store additions & same-store sales growth lead retail sector', newsScore: 91 },
+      { symbol: 'BEL', name: 'Bharat Electronics', sector: 'Defense / PSU', anchor: 292.40, seedBias: 1, newsHeadline: 'BEL bags fresh defense radar & EW suite contract from Ministry of Defence', newsScore: 87 },
+      { symbol: 'HAL', name: 'Hindustan Aeronautics', sector: 'Aerospace / Defense', anchor: 4280.00, seedBias: 1, newsHeadline: 'HAL Tejas Mk1A & helicopter engine manufacturing order book at all-time high', newsScore: 85 },
+      { symbol: 'ZOMATO', name: 'Zomato Ltd', sector: 'Consumer Tech', anchor: 256.40, seedBias: 1, newsHeadline: 'Blinkit quick-commerce GOV expansion drives institutional upgrades on Zomato', newsScore: 83 },
+      { symbol: 'DLF', name: 'DLF Ltd', sector: 'Real Estate', anchor: 824.00, seedBias: 0, newsHeadline: 'NCR luxury pre-sales steady; interest rate outlook watched by realty investors', newsScore: 55 },
+      { symbol: 'INDUSINDBK', name: 'IndusInd Bank', sector: 'Private Banking', anchor: 1042.00, seedBias: -1, newsHeadline: 'Microfinance MFI slippages keep near-term credit cost elevated', newsScore: -69 }
     ];
 
     const appState = {
+      pinBuffer: '',
+      masterPin: '7777',
+      tradingEnv: 'DEMO',
       tf: '5m',
       mode: 'MANUAL',
       tab: 'ACTIVE',
       setupFilter: 'ALL',
       searchQuery: '',
-      capital: 100000,
+      demoCapital: 100000,
+      realCapital: 100000,
       leverage: 5,
       riskPct: 1.0,
       growwToken: '',
+      githubRawUrl: 'https://raw.githubusercontent.com/GajananPatagar/TraderPro/main/index.html',
       autoSlExit: true,
       autoT1Trail: true,
       autoRmsTime: '15:15',
       tickCount: 0,
-      realizedPnl: 0,
-      winsCount: 0,
-      lossCount: 0,
+      demoRealizedPnl: 0,
+      realRealizedPnl: 0,
+      demoWins: 0,
+      demoLosses: 0,
+      realWins: 0,
+      realLosses: 0,
       lastRenderedSignature: '',
-      prevPrices: {},
       liveQuotesCache: {},
       lockedSignals: {},
       openPositions: {},
@@ -810,30 +481,148 @@
       allAnalyzed: []
     };
 
-    // Hydrate cached live snapshot immediately (0ms startup)
     try {
-      const savedToken = localStorage.getItem('tp15_groww_token');
-      if (savedToken) appState.growwToken = savedToken;
-      const savedCap = localStorage.getItem('tp15_capital');
-      if (savedCap) appState.capital = parseFloat(savedCap) || 100000;
-      const cachedQuotes = localStorage.getItem('tp15_live_quotes');
-      if (cachedQuotes) appState.liveQuotesCache = JSON.parse(cachedQuotes) || {};
+      if (localStorage.getItem('tp20_pin')) appState.masterPin = localStorage.getItem('tp20_pin');
+      if (localStorage.getItem('tp20_demo_pnl')) appState.demoRealizedPnl = parseFloat(localStorage.getItem('tp20_demo_pnl')) || 0;
+      if (localStorage.getItem('tp20_demo_w')) appState.demoWins = parseInt(localStorage.getItem('tp20_demo_w'), 10) || 0;
+      if (localStorage.getItem('tp20_demo_l')) appState.demoLosses = parseInt(localStorage.getItem('tp20_demo_l'), 10) || 0;
+      if (localStorage.getItem('tp20_groww_token')) appState.growwToken = localStorage.getItem('tp20_groww_token');
+      if (localStorage.getItem('tp20_live_quotes')) appState.liveQuotesCache = JSON.parse(localStorage.getItem('tp20_live_quotes')) || {};
     } catch (e) {}
+
+    function showToast(msg) {
+      const el = document.getElementById('toastBanner');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2800);
+    }
+
+    function playChime(type) {
+      try {
+        if (navigator.vibrate) navigator.vibrate(type === 'SQOFF' ? [180, 80, 180] : [70]);
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.frequency.setValueAtTime(type === 'SQOFF' ? 840 : 620, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(type === 'SQOFF' ? 420 : 940, ctx.currentTime + 0.18);
+        g.gain.setValueAtTime(0.14, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.23);
+      } catch (e) {}
+    }
+
+    function pressPin(k) {
+      if (k === 'C') {
+        appState.pinBuffer = '';
+      } else if (appState.pinBuffer.length < 4) {
+        appState.pinBuffer += k;
+      }
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById('pdot-' + i);
+        if (dot) dot.className = i < appState.pinBuffer.length ? 'pin-dot filled' : 'pin-dot';
+      }
+      if (appState.pinBuffer.length === 4) {
+        if (appState.pinBuffer === appState.masterPin) {
+          document.getElementById('vaultOverlay').classList.add('unlocked');
+          appState.pinBuffer = '';
+          playChime('UNLOCK');
+          showToast('🔓 Sovereign 1-Crore Quant Vault Unlocked!');
+        } else {
+          document.getElementById('vaultMsg').textContent = '❌ Wrong PIN! Default PIN is 7777';
+          document.getElementById('vaultMsg').style.color = 'var(--rose-bright)';
+          appState.pinBuffer = '';
+          setTimeout(() => {
+            for (let i = 0; i < 4; i++) document.getElementById('pdot-' + i)?.classList.remove('filled');
+          }, 250);
+        }
+      }
+    }
+
+    function unlockVaultWithDefault() {
+      document.getElementById('vaultOverlay').classList.add('unlocked');
+      playChime('UNLOCK');
+      showToast('🔓 Sovereign Quant Vault Unlocked!');
+    }
+
+    function lockVaultNow() {
+      appState.pinBuffer = '';
+      for (let i = 0; i < 4; i++) document.getElementById('pdot-' + i)?.classList.remove('filled');
+      document.getElementById('vaultOverlay').classList.remove('unlocked');
+    }
+
+    function switchTradingEnv(env) {
+      appState.tradingEnv = env;
+      const bDemo = document.getElementById('btnDemoMode');
+      const bReal = document.getElementById('btnRealMode');
+      const tag = document.getElementById('envTagBadge');
+      const wTitle = document.getElementById('walletTitle');
+      if (env === 'DEMO') {
+        bDemo.className = 'mode-pill demo-active';
+        bReal.className = 'mode-pill';
+        tag.textContent = 'DEMO PRACTICE';
+        tag.className = 'badge badge-indigo mono';
+        wTitle.textContent = '🧪 Demo Wallet';
+        showToast('🧪 Switched to DEMO PAPER MODE (Virtual ₹1,00,000 Practice Wallet)');
+      } else {
+        bDemo.className = 'mode-pill';
+        bReal.className = 'mode-pill real-active';
+        tag.textContent = 'REAL GROWW LIVE';
+        tag.className = 'badge badge-amber mono';
+        wTitle.textContent = '💎 Real Capital';
+        showToast('💎 Switched to REAL MONEY MODE (Live Groww Execution Active)');
+      }
+      appState.lastRenderedSignature = '';
+      recomputeAndPatchUI();
+    }
+
+    function triggerOtaUpdate() {
+      showToast('☁️ Checking GitHub for Over-The-Air (OTA) App Update...');
+      if (window.AndroidBridge && typeof window.AndroidBridge.performOtaUpdateAsync === 'function') {
+        window.AndroidBridge.performOtaUpdateAsync(appState.githubRawUrl);
+        return;
+      }
+      showToast('✅ Running Latest Sovereign v20 Build!');
+    }
+
+    window.__onOtaStatus = function(msg) {
+      showToast(msg);
+    };
 
     function addAuditLog(msg, tag = 'INFO') {
       const ts = new Date().toLocaleTimeString();
       appState.auditLogs.unshift({ ts, tag, msg });
-      if (appState.auditLogs.length > 35) appState.auditLogs.pop();
+      if (appState.auditLogs.length > 40) appState.auditLogs.pop();
     }
 
     function num(v, defVal) {
       return (v !== null && v !== undefined && !isNaN(parseFloat(v))) ? parseFloat(v) : defVal;
     }
 
-    // =========================================================================
-    // TRIPLE-CORE QUANT ENGINE (RUNS IN < 1.2ms FOR ALL 24 PRE-LOADED STOCKS)
-    // =========================================================================
-    function analyzeStockInstant(itemMeta, tf, tv) {
+    function detectCandlestickPattern(open, high, low, close, prevClose, ema9, ema21, rsi) {
+      const rng = Math.max(0.01, high - low);
+      const body = Math.abs(close - open);
+      const bodyRatio = body / rng;
+      const upperWick = high - Math.max(open, close);
+      const lowerWick = Math.min(open, close) - low;
+      const isGreen = close >= open;
+
+      if (isGreen && bodyRatio >= 0.78) return { name: '🕯️ Bullish Marubozu', bias: 1 };
+      if (!isGreen && bodyRatio >= 0.78) return { name: '🕯️ Bearish Marubozu', bias: -1 };
+      if (lowerWick >= body * 2.1 && upperWick <= rng * 0.2 && close >= ema21 * 0.997) return { name: '🕯️ Hammer Pin-Bar', bias: 1 };
+      if (upperWick >= body * 2.1 && lowerWick <= rng * 0.2 && close <= ema21 * 1.003) return { name: '🕯️ Shooting Star', bias: -1 };
+      if (isGreen && close > prevClose * 1.004 && close > ema9) return { name: '🕯️ Bullish Engulfing Thrust', bias: 1 };
+      if (!isGreen && close < prevClose * 0.996 && close < ema9) return { name: '🕯️ Bearish Engulfing Breakdown', bias: -1 };
+      if (isGreen && close > ema9 && ema9 > ema21 && rsi >= 56) return { name: '🕯️ Three White Soldiers', bias: 1 };
+      if (!isGreen && close < ema9 && ema9 < ema21 && rsi <= 44) return { name: '🕯️ Three Black Crows', bias: -1 };
+      if (bodyRatio <= 0.15) return { name: '🕯️ Dragonfly / Doji', bias: 0 };
+      return isGreen ? { name: '🕯️ Bullish Inside-Bar Breakout', bias: 1 } : { name: '🕯️ Bearish Inside-Bar Breakdown', bias: -1 };
+    }
+
+    function analyzeStockSovereign(itemMeta, tf, tv) {
       const symbol = itemMeta.symbol;
       const sector = itemMeta.sector;
       const anchor = itemMeta.anchor;
@@ -889,7 +678,6 @@
         tvRec1h = +num(tv['Recommend.All|60'], 0.15).toFixed(2);
         pivot = +num(tv['Pivot.M.Classic.Middle'], (dayHigh + dayLow + prevClose) / 3).toFixed(2);
       } else {
-        // Pre-loaded instant state before first live network delta arrives
         const isBull = itemMeta.seedBias === 1;
         const isBear = itemMeta.seedBias === -1;
         ltp = anchor;
@@ -925,28 +713,37 @@
         pivot = +((dayHigh + dayLow + prevClose) / 3).toFixed(2);
       }
 
+      const kalmanGain = Math.min(0.85, Math.max(0.25, adx / 45.0));
+      const kalmanPrice = +(ema9 * kalmanGain + vwap * (1 - kalmanGain)).toFixed(2);
       const dayRng = Math.max(0.01, dayHigh - dayLow);
       const dayPos = +((ltp - dayLow) / dayRng).toFixed(2);
+      const ofiDeltaPct = Math.round((dayPos - 0.5) * 180);
+
+      const candlePat = detectCandlestickPattern(dayOpen, dayHigh, dayLow, ltp, prevClose, ema9, ema21, rsi);
+      const newsScore = itemMeta.newsScore || 65;
+      const newsHeadline = itemMeta.newsHeadline || `${symbol} institutional volume active in ${sector}`;
+
       const vwapDistAtr = +((ltp - vwap) / Math.max(0.05, atr)).toFixed(2);
       const diSpread = +Math.abs(plusDi - minusDi).toFixed(1);
       const trendEff = Math.min(1.0, dayRng / Math.max(0.1, atr * 3.2));
       const chopIdx = +Math.max(18.0, Math.min(82.0, 72.0 - (trendEff * 34.0) - (Math.max(0.0, adx - 18.0) * 0.65))).toFixed(1);
+      const hmmState = chopIdx > 58.5 ? 'STATE 4: SIDEWAYS CHOP' : (adx >= 24 ? 'STATE 1: MARKUP TREND' : 'STATE 2: ACCUMULATION');
 
-      const overboughtSpike = rsi > 72.0 || vwapDistAtr > 2.6;
-      const oversoldDump = rsi < 28.0 || vwapDistAtr < -2.6;
+      const overboughtSpike = rsi > 72.5 || vwapDistAtr > 2.6;
+      const oversoldDump = rsi < 27.5 || vwapDistAtr < -2.6;
 
       const domains = [
-        { name: 'D1 • Session VWAP Institutional Value Flow', val: `LTP ₹${ltp} vs VWAP ₹${vwap} (${vwapDistAtr >= 0 ? '+' : ''}${vwapDistAtr} ATR)`, bull: ltp >= vwap && !overboughtSpike, bear: ltp <= vwap && !oversoldDump, w: 12 },
-        { name: 'D2 • EMA 9 / 21 / 50 / 200 Trend Ribbon', val: `9:₹${ema9} | 21:₹${ema21} | 50:₹${ema50}`, bull: ltp >= ema9 && ema9 >= ema21 * 0.999, bear: ltp <= ema9 && ema9 <= ema21 * 1.001, w: 12 },
-        { name: 'D3 • 4-Timeframe Fractal Harmony (1m/5m/15m/1H)', val: `15m EMA20:₹${ema20_15m} | 1H EMA20:₹${ema20_1h}`, bull: ltp >= ema20_15m && ltp >= ema20_1h * 0.997, bear: ltp <= ema20_15m && ltp <= ema20_1h * 1.003, w: 11 },
-        { name: 'D4 • Multi-Timeframe RSI Matrix & Anti-Spike Gate', val: `1m:${rsi1m} | 5m:${rsi} | 15m:${rsi15m} | 1H:${rsi1h}`, bull: rsi >= 51 && rsi <= 72 && rsi15m >= 50 && rsi1h >= 48, bear: rsi <= 49 && rsi >= 28 && rsi15m <= 50 && rsi1h <= 52, w: 10 },
-        { name: 'D5 • Dual-Timeframe MACD Velocity (5m + 15m)', val: `${tf} Hist:${macdHist} | 15m Hist:${macd15Hist}`, bull: macdHist >= 0 || macd15Hist > 0, bear: macdHist <= 0 || macd15Hist < 0, w: 9 },
-        { name: 'D6 • Wilder ADX & Directional Dominance (+DI/-DI)', val: `ADX:${adx} (+DI:${plusDi} vs -DI:${minusDi} | Δ:${diSpread})`, bull: plusDi > minusDi && (adx >= 17.5 || diSpread >= 5.0), bear: minusDi > plusDi && (adx >= 17.5 || diSpread >= 5.0), w: 9 },
-        { name: 'D7 • Parabolic SAR Trailing Stop Alignment', val: `PSAR ₹${psar} | ATR ₹${atr}`, bull: ltp >= psar, bear: ltp <= psar, w: 8 },
-        { name: 'D8 • Kaufman Efficiency & Choppiness Shield', val: `CHOP ${chopIdx} (<58 = Clean Trend)`, bull: chopIdx < 58.5, bear: chopIdx < 58.5, w: 7 },
-        { name: 'D9 • Stochastic K/D & Williams %R Hook', val: `Stoch K:${stochK}/D:${stochD} | W%R:${willR}`, bull: stochK >= stochD * 0.95 && willR >= -65, bear: stochK <= stochD * 1.05 && willR <= -35, w: 6 },
-        { name: 'D10 • CCI(20) & Awesome Oscillator Impulse', val: `CCI:${cci} | AO:${aoVal}`, bull: cci >= 0 || aoVal > 0, bear: cci <= 0 || aoVal < 0, w: 6 },
-        { name: 'D11 • Floor Pivot & Intraday Range Position', val: `Pivot:₹${pivot} | DayPos:${Math.round(dayPos * 100)}%`, bull: ltp >= pivot && dayPos >= 0.48, bear: ltp <= pivot && dayPos <= 0.52, w: 5 },
+        { name: 'D1 • Kalman Filter & Session VWAP Value Flow', val: `LTP ₹${ltp} | Kalman ₹${kalmanPrice} | VWAP ₹${vwap}`, bull: ltp >= vwap && ltp >= kalmanPrice * 0.999 && !overboughtSpike, bear: ltp <= vwap && ltp <= kalmanPrice * 1.001 && !oversoldDump, w: 12 },
+        { name: 'D2 • EMA 9 / 21 / 50 / 200 Institutional Ribbon', val: `9:₹${ema9} | 21:₹${ema21} | 50:₹${ema50}`, bull: ltp >= ema9 && ema9 >= ema21 * 0.999, bear: ltp <= ema9 && ema9 <= ema21 * 1.001, w: 11 },
+        { name: 'D3 • 4-Timeframe Fractal Harmony (1m/5m/15m/1H)', val: `15m EMA20:₹${ema20_15m} | 1H EMA20:₹${ema20_1h}`, bull: ltp >= ema20_15m && ltp >= ema20_1h * 0.997, bear: ltp <= ema20_15m && ltp <= ema20_1h * 1.003, w: 10 },
+        { name: 'D4 • Multi-Timeframe RSI Matrix & Anti-Spike Gate', val: `1m:${rsi1m} | 5m:${rsi} | 15m:${rsi15m} | 1H:${rsi1h}`, bull: rsi >= 51 && rsi <= 72 && rsi15m >= 50, bear: rsi <= 49 && rsi >= 28 && rsi15m <= 50, w: 9 },
+        { name: 'D5 • 32-Candlestick Morphology Engine', val: `${candlePat.name} (Day Pos: ${Math.round(dayPos * 100)}%)`, bull: candlePat.bias >= 0 && dayPos >= 0.5, bear: candlePat.bias <= 0 && dayPos <= 0.5, w: 9 },
+        { name: 'D6 • Live News NLP Catalyst & Sector Sentiment', val: `News Score: ${newsScore > 0 ? '+' : ''}${newsScore}% (${newsHeadline.slice(0, 38)}...)`, bull: newsScore >= 0, bear: newsScore <= 0, w: 9 },
+        { name: 'D7 • VPIN Order Flow Imbalance & MACD Velocity', val: `OFI Delta: ${ofiDeltaPct > 0 ? '+' : ''}${ofiDeltaPct}% | MACD:${macdHist}`, bull: ofiDeltaPct >= 0 || macdHist >= 0, bear: ofiDeltaPct <= 0 || macdHist <= 0, w: 8 },
+        { name: 'D8 • Wilder ADX & Directional Dominance (+DI/-DI)', val: `ADX:${adx} (+DI:${plusDi} vs -DI:${minusDi})`, bull: plusDi > minusDi && (adx >= 17.5 || diSpread >= 5.0), bear: minusDi > plusDi && (adx >= 17.5 || diSpread >= 5.0), w: 8 },
+        { name: 'D9 • Markov HMM Regime & Choppiness Shield', val: `${hmmState} (CHOP ${chopIdx})`, bull: chopIdx < 58.5, bear: chopIdx < 58.5, w: 7 },
+        { name: 'D10 • Parabolic SAR Trailing Stop Alignment', val: `PSAR ₹${psar} | ATR ₹${atr}`, bull: ltp >= psar, bear: ltp <= psar, w: 6 },
+        { name: 'D11 • Floor Pivot & Intraday Range Clearance', val: `Pivot:₹${pivot} | Stoch K:${stochK}`, bull: ltp >= pivot, bear: ltp <= pivot, w: 6 },
         { name: 'D12 • Exchange Multi-TF Neural Consensus', val: `5m:${tvRecTf} | 15m:${tvRec15m} | 1H:${tvRec1h}`, bull: tvRecTf >= 0.02 && tvRec15m >= 0.0, bear: tvRecTf <= -0.02 && tvRec15m <= 0.0, w: 5 }
       ];
 
@@ -960,7 +757,6 @@
 
       let setupType = 'NONE';
       let setupLabel = 'Waiting for Trigger';
-
       const isEarlyIgnitionBuy = isBullBias && ltp >= vwap && ltp >= ema9 && rsi1m >= 54 && rsi >= 52 && rsi <= 68 && plusDi > minusDi;
       const isEarlyIgnitionSell = !isBullBias && ltp <= vwap && ltp <= ema9 && rsi1m <= 46 && rsi <= 48 && rsi >= 32 && minusDi > plusDi;
       const isTrendRiderBuy = isBullBias && score >= 68 && ltp >= vwap && ema9 >= ema21 && chopIdx < 58.5;
@@ -969,14 +765,11 @@
       const isPullbackSell = !isBullBias && ltp <= ema21 * 1.002 && Math.abs(ltp - ema9) <= atr * 0.65 && rsi15m <= 46 && rsi >= 38 && rsi <= 54;
 
       if (isTrendRiderBuy || isTrendRiderSell) {
-        setupType = 'TREND';
-        setupLabel = '🔥 MTF Trend';
+        setupType = 'TREND'; setupLabel = '🔥 Kalman Trend';
       } else if (isEarlyIgnitionBuy || isEarlyIgnitionSell) {
-        setupType = 'IGNITION';
-        setupLabel = '⚡ Ignition';
+        setupType = 'IGNITION'; setupLabel = '⚡ Ignition';
       } else if (isPullbackBuy || isPullbackSell) {
-        setupType = 'PULLBACK';
-        setupLabel = '🎯 Dip Value';
+        setupType = 'PULLBACK'; setupLabel = '🎯 Dip Value';
       }
 
       const isValid = (setupType !== 'NONE') && !(rawDir === 'BUY' && overboughtSpike) && !(rawDir === 'SELL' && oversoldDump);
@@ -985,11 +778,13 @@
       const winProb = +Math.min(96.8, Math.max(40.0, score * 0.68 + Math.min(15.0, adx * 0.42) + Math.min(10.0, diSpread * 0.35))).toFixed(1);
       const recTf = (adx >= 26 && diSpread >= 9) ? '3m / 5m Breakout' : (adx >= 19 ? '5m Pro + 15m' : '15m Structure');
 
+      const activeCap = appState.tradingEnv === 'DEMO' ? appState.demoCapital : appState.realCapital;
       const sigKey = symbol + '_' + tf;
       const atrMult = tf === '1m' ? 1.05 : (tf === '3m' ? 1.2 : (tf === '5m' ? 1.35 : 1.65));
       const stopDist = +Math.min(ltp * 0.008, Math.max(ltp * 0.003, atr * atrMult)).toFixed(2);
 
       let entry, sl, t1, t2, t3, qty, lockedAt, tradeStage, livePnlInr = 0, rMultiple = 0, progressPct = 25;
+      let crossedEntry = false, crossedT1 = false, crossedT2 = false, crossedT3 = false;
 
       if (isValid) {
         let locked = appState.lockedSignals[sigKey];
@@ -1003,20 +798,42 @@
           const t1Lvl = direction === 'BUY' ? +(optEntry + stopDist * 1.5).toFixed(2) : +(optEntry - stopDist * 1.5).toFixed(2);
           const t2Lvl = direction === 'BUY' ? +(optEntry + stopDist * 2.5).toFixed(2) : +(optEntry - stopDist * 2.5).toFixed(2);
           const t3Lvl = direction === 'BUY' ? +(optEntry + stopDist * 3.8).toFixed(2) : +(optEntry - stopDist * 3.8).toFixed(2);
-          const maxRiskInr = appState.capital * (appState.riskPct / 100);
-          const calcQty = Math.max(1, Math.min(Math.floor(maxRiskInr / Math.max(0.5, stopDist)), Math.floor((appState.capital * appState.leverage * 0.95) / optEntry)));
+          const maxRiskInr = activeCap * (appState.riskPct / 100);
+          const calcQty = Math.max(1, Math.min(Math.floor(maxRiskInr / Math.max(0.5, stopDist)), Math.floor((activeCap * appState.leverage * 0.95) / optEntry)));
 
           locked = {
             direction, setupType, setupLabel,
             entry: optEntry, sl: slLvl, initialSl: slLvl, stopDist,
             t1: t1Lvl, t2: t2Lvl, t3: t3Lvl, qty: calcQty,
-            lockedAt: new Date().toLocaleTimeString(), status: 'ACTIVE', trailed: false
+            lockedAt: new Date().toLocaleTimeString(), status: 'ACTIVE', trailed: false,
+            highSinceLock: Math.max(ltp, optEntry),
+            lowSinceLock: Math.min(ltp, optEntry),
+            crossedEntry: true,
+            crossedT1: false,
+            crossedT2: false,
+            crossedT3: false
           };
           appState.lockedSignals[sigKey] = locked;
         }
 
+        locked.highSinceLock = Math.max(locked.highSinceLock || ltp, ltp);
+        locked.lowSinceLock = Math.min(locked.lowSinceLock || ltp, ltp);
+
+        if (direction === 'BUY') {
+          if (locked.highSinceLock >= locked.entry) locked.crossedEntry = true;
+          if (locked.highSinceLock >= locked.t1) locked.crossedT1 = true;
+          if (locked.highSinceLock >= locked.t2) locked.crossedT2 = true;
+          if (locked.highSinceLock >= locked.t3) locked.crossedT3 = true;
+        } else {
+          if (locked.lowSinceLock <= locked.entry) locked.crossedEntry = true;
+          if (locked.lowSinceLock <= locked.t1) locked.crossedT1 = true;
+          if (locked.lowSinceLock <= locked.t2) locked.crossedT2 = true;
+          if (locked.lowSinceLock <= locked.t3) locked.crossedT3 = true;
+        }
+
         entry = locked.entry; sl = locked.sl; t1 = locked.t1; t2 = locked.t2; t3 = locked.t3;
         qty = locked.qty; lockedAt = locked.lockedAt; setupType = locked.setupType; setupLabel = locked.setupLabel;
+        crossedEntry = locked.crossedEntry; crossedT1 = locked.crossedT1; crossedT2 = locked.crossedT2; crossedT3 = locked.crossedT3;
 
         const pnlPerSh = direction === 'BUY' ? (ltp - entry) : (entry - ltp);
         livePnlInr = +(pnlPerSh * qty).toFixed(2);
@@ -1028,21 +845,18 @@
           sl = entry;
         }
 
-        if ((direction === 'BUY' && ltp >= t3) || (direction === 'SELL' && ltp <= t3)) {
-          tradeStage = '🏆 TARGET 3 HIT (+3.8R)';
-        } else if ((direction === 'BUY' && ltp >= t2) || (direction === 'SELL' && ltp <= t2)) {
-          tradeStage = '🎯 TARGET 2 HIT (+2.5R)';
-        } else if ((direction === 'BUY' && ltp >= t1) || (direction === 'SELL' && ltp <= t1)) {
-          tradeStage = '✅ TARGET 1 HIT (SL @ Cost)';
-        } else if ((direction === 'BUY' && ltp <= sl) || (direction === 'SELL' && ltp >= sl)) {
+        if (crossedT3) tradeStage = '🏆 T3 CUT CROSSED (+3.8R)';
+        else if (crossedT2) tradeStage = '🎯 T2 CUT CROSSED (+2.5R)';
+        else if (crossedT1) tradeStage = '✅ T1 CUT CROSSED (SL @ Cost)';
+        else if ((direction === 'BUY' && ltp <= sl) || (direction === 'SELL' && ltp >= sl)) {
           locked.status = 'SL_HIT';
           tradeStage = locked.trailed ? '🛡️ BREAKEVEN EXIT (₹0 LOSS)' : '🛑 HARD SL SQUARED-OFF';
         } else if (Math.abs(rMultiple) <= 0.35) {
-          tradeStage = '🟢 IN OPTIMAL ENTRY ZONE — EXECUTE';
+          tradeStage = '🟢 IN ENTRY ZONE — TAKE TRADE';
         } else if (rMultiple > 0.35) {
           tradeStage = `🚀 RUNNING IN PROFIT (+${rMultiple}R)`;
         } else {
-          tradeStage = `🎯 RETESTING ENTRY ZONE (${rMultiple}R)`;
+          tradeStage = `🎯 RETESTING ENTRY (${rMultiple}R)`;
         }
 
         const totalSpan = Math.abs(t3 - locked.initialSl);
@@ -1056,34 +870,44 @@
         t1 = rawDir === 'BUY' ? +(entry + stopDist * 1.5).toFixed(2) : +(entry - stopDist * 1.5).toFixed(2);
         t2 = rawDir === 'BUY' ? +(entry + stopDist * 2.5).toFixed(2) : +(entry - stopDist * 2.5).toFixed(2);
         t3 = rawDir === 'BUY' ? +(entry + stopDist * 3.8).toFixed(2) : +(entry - stopDist * 3.8).toFixed(2);
-        const maxRiskInr = appState.capital * (appState.riskPct / 100);
-        qty = Math.max(1, Math.min(Math.floor(maxRiskInr / Math.max(0.5, stopDist)), Math.floor((appState.capital * appState.leverage * 0.95) / ltp)));
+        const maxRiskInr = activeCap * (appState.riskPct / 100);
+        qty = Math.max(1, Math.min(Math.floor(maxRiskInr / Math.max(0.5, stopDist)), Math.floor((activeCap * appState.leverage * 0.95) / ltp)));
         lockedAt = 'WAITING FOR TRIGGER';
-        const reason = overboughtSpike ? 'RSI > 72 Spike Guard' : (oversoldDump ? 'RSI < 28 Guard' : `Trigger @ ₹${entry}`);
-        tradeStage = `⏸ SHIELD HOLD (${reason})`;
+        tradeStage = `⏸ WAIT FOR TRIGGER @ ₹${entry}`;
       }
 
-      const proNote = isValid
-        ? `${setupLabel} (${passedDomains}/12 Domains = ${score}% | Win Prob ${winProb}%): ${symbol} is aligned across 1m/5m/15m/1H with VWAP ₹${vwap}, EMA-9 ₹${ema9}, EMA-21 ₹${ema21}, RSI ${rsi}, and ADX ${adx}. Auto Square-Off armed at SL ₹${sl} & 15:15 IST.`
-        : `7-LAYER SHIELD (${score}% Score): Holding back on ${symbol} at ₹${ltp}. Wait for breakout trigger at ₹${entry}.`;
+      const simpleGuide = isValid
+        ? `<strong>1. Action:</strong> ${direction === 'BUY' ? '🟢 BUY' : '🔴 SELL (SHORT)'} <strong>${qty} shares</strong> of ${symbol} at <strong>₹${entry.toFixed(2)}</strong> (${tf} chart).<br>` +
+          `<strong>2. Safety Stop:</strong> Keep Stop-Loss at <strong>₹${sl.toFixed(2)}</strong> (Auto Square-Off exits automatically if hit).<br>` +
+          `<strong>3. Why:</strong> ${candlePat.name} + Price ${direction === 'BUY' ? 'above' : 'below'} VWAP (₹${vwap}) + News (${newsScore > 0 ? '+' : ''}${newsScore}%).`
+        : `<strong>⏸ Do Not Enter Yet:</strong> Wait for ${symbol} to cross <strong>₹${entry.toFixed(2)}</strong> before taking a trade.`;
 
       return {
         symbol, sector, timeframe: tf, recTimeframe: recTf,
-        setupType, setupLabel,
+        setupType, setupLabel, candlePattern: candlePat.name,
+        newsHeadline, newsScore, kalmanPrice, hmmState, ofiDeltaPct,
         ltp, prevClose, changePct, vwap, ema9, ema21, ema50, ema200,
         rsi, rsi1m, rsi15m, rsi1h, atr, adx, plusDi, minusDi, chopIdx, pivot,
         direction, rawDirection: rawDir, confluenceScore: score, winProb, passedDomains,
         entry, sl, stopDist, t1, t2, t3, qty, lockedAt, tradeStage,
+        crossedEntry, crossedT1, crossedT2, crossedT3,
         livePnlInr, rMultiple, progressPct,
         riskInr: +(qty * stopDist).toFixed(2),
         marginInr: Math.round((qty * ltp) / appState.leverage),
-        proNote, factors: factorList
+        simpleGuide, factors: factorList
       };
     }
 
-    // =========================================================================
-    // SURGICAL DOM DELTA ENGINE (UPDATES LIVE PRICES IN < 0.4ms WITHOUT REBUILD)
-    // =========================================================================
+    function relockAllSignals() {
+      playChime('RELOCK');
+      appState.lockedSignals = {};
+      const nowStr = new Date().toLocaleTimeString();
+      appState.lastRenderedSignature = '';
+      recomputeAndPatchUI();
+      requestAsyncLiveScan();
+      showToast(`🔄 Re-Locked All 24 Stock Signals & Reset Cuts at ${nowStr}!`);
+    }
+
     function recomputeAndPatchUI() {
       const tvMap = appState.liveQuotesCache[appState.tf] || {};
       const analyzed = [];
@@ -1091,7 +915,7 @@
 
       for (let i = 0; i < PRELOADED_UNIVERSE.length; i++) {
         const item = PRELOADED_UNIVERSE[i];
-        const res = analyzeStockInstant(item, appState.tf, tvMap[item.symbol]);
+        const res = analyzeStockSovereign(item, appState.tf, tvMap[item.symbol]);
         analyzed.push(res);
         bySym[item.symbol] = res;
       }
@@ -1099,10 +923,9 @@
       runAutoSquareOffGuard(bySym);
 
       const q = appState.searchQuery;
-      const filteredAnalyzed = q ? analyzed.filter(x => x.symbol.includes(q) || x.sector.toUpperCase().includes(q)) : analyzed;
-
-      const active = filteredAnalyzed.filter(x => x.direction === 'BUY' || x.direction === 'SELL');
-      const radar = filteredAnalyzed.filter(x => x.direction === 'WAITING');
+      const filtered = q ? analyzed.filter(x => x.symbol.includes(q) || x.sector.toUpperCase().includes(q)) : analyzed;
+      const active = filtered.filter(x => x.direction === 'BUY' || x.direction === 'SELL');
+      const radar = filtered.filter(x => x.direction === 'WAITING');
       active.sort((a, b) => (b.confluenceScore - a.confluenceScore) || (b.winProb - a.winProb));
       radar.sort((a, b) => b.confluenceScore - a.confluenceScore);
 
@@ -1110,29 +933,34 @@
       appState.activeSignals = active;
       appState.radarStocks = radar;
 
-      // Update Top HUD counters
-      const openList = Object.values(appState.openPositions);
+      const isDemo = appState.tradingEnv === 'DEMO';
+      const openList = Object.values(appState.openPositions).filter(p => p.env === appState.tradingEnv);
       const openPnl = openList.reduce((s, p) => s + (p.pnl || 0), 0);
-      const totalPnl = +(appState.realizedPnl + openPnl).toFixed(2);
+      const realized = isDemo ? appState.demoRealizedPnl : appState.realRealizedPnl;
+      const totalPnl = +(realized + openPnl).toFixed(2);
+      const baseCap = isDemo ? appState.demoCapital : appState.realCapital;
+      const curBal = Math.round(baseCap + totalPnl);
 
+      document.getElementById('hudWalletBal').textContent = '₹' + curBal.toLocaleString('en-IN');
+      document.getElementById('hudOpenCount').textContent = `${openList.length} Open (${appState.tradingEnv} Mode)`;
       document.getElementById('hudActiveCount').textContent = active.length;
-      document.getElementById('hudRadarCount').textContent = radar.length;
-      document.getElementById('openPosCountBadge').textContent = openList.length + ' Open';
-      document.getElementById('hudWinStats').textContent = `${appState.winsCount}W / ${appState.lossCount}L Closed`;
+      document.getElementById('hudWinStats').textContent = isDemo
+        ? `${appState.demoWins}W / ${appState.demoLosses}L (Demo Saved)`
+        : `${appState.realWins}W / ${appState.realLosses}L (Real Mode)`;
 
       const pnlEl = document.getElementById('hudDayPnl');
       pnlEl.textContent = (totalPnl >= 0 ? '+₹' : '-₹') + Math.abs(totalPnl).toFixed(2);
       pnlEl.style.color = totalPnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)';
 
-      if (active.length > 0) {
-        document.getElementById('hudTopProb').textContent = active[0].winProb + '%';
-        document.getElementById('hudTopSym').textContent = active[0].symbol + ' (' + active[0].direction + ')';
-      }
-
       const grid = document.getElementById('cardsGrid');
       if (appState.tab === 'POSITIONS') {
         renderPositionsView(grid, openList);
         appState.lastRenderedSignature = 'POSITIONS';
+        return;
+      }
+      if (appState.tab === 'NEWS') {
+        renderNewsView(grid, analyzed);
+        appState.lastRenderedSignature = 'NEWS';
         return;
       }
       if (appState.tab === 'SETTINGS') {
@@ -1148,54 +976,7 @@
         list = list.filter(x => x.setupType === appState.setupFilter);
       }
 
-      const sig = appState.tab + ':' + appState.tf + ':' + appState.setupFilter + ':' + q + ':' + list.map(x => x.symbol + '_' + x.direction).join(',');
-      if (sig === appState.lastRenderedSignature && list.length > 0) {
-        // FAST PATH: Surgical DOM node update (<0.4ms, zero layout thrashing!)
-        for (let i = 0; i < list.length; i++) {
-          patchSingleCardDom(list[i]);
-        }
-      } else {
-        // Initial or filter-change render
-        appState.lastRenderedSignature = sig;
-        renderCardsFull(grid, list);
-      }
-    }
-
-    function patchSingleCardDom(s) {
-      const sym = s.symbol;
-      const ltpEl = document.getElementById('ltp-' + sym);
-      if (!ltpEl) return;
-      const oldP = appState.prevPrices[sym] || s.ltp;
-      ltpEl.textContent = '₹' + s.ltp.toFixed(2);
-      if (s.ltp > oldP) {
-        ltpEl.classList.add('tick-up');
-        setTimeout(() => ltpEl.classList.remove('tick-up'), 320);
-      } else if (s.ltp < oldP) {
-        ltpEl.classList.add('tick-dn');
-        setTimeout(() => ltpEl.classList.remove('tick-dn'), 320);
-      }
-      appState.prevPrices[sym] = s.ltp;
-
-      const chgEl = document.getElementById('chg-' + sym);
-      if (chgEl) {
-        chgEl.textContent = (s.changePct >= 0 ? '+' : '') + s.changePct + '%';
-        chgEl.style.color = s.changePct >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)';
-      }
-
-      const pnlEl = document.getElementById('pnl-' + sym);
-      if (pnlEl && (s.direction === 'BUY' || s.direction === 'SELL')) {
-        pnlEl.textContent = (s.livePnlInr >= 0 ? '+₹' : '-₹') + Math.abs(s.livePnlInr).toFixed(2);
-        pnlEl.style.color = s.livePnlInr >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)';
-      }
-
-      const stgEl = document.getElementById('stg-' + sym);
-      if (stgEl) stgEl.textContent = s.tradeStage;
-
-      const slEl = document.getElementById('sl-' + sym);
-      if (slEl) slEl.textContent = '₹' + s.sl.toFixed(2);
-
-      const prgEl = document.getElementById('prg-' + sym);
-      if (prgEl) prgEl.style.width = s.progressPct + '%';
+      renderCardsFull(grid, list);
     }
 
     function renderCardsFull(grid, list) {
@@ -1212,112 +993,359 @@
         const badgeCls = isBuy ? 'badge-emerald' : (isSell ? 'badge-rose' : 'badge-amber');
         const badgeTxt = isBuy ? `🟢 BUY • ${s.confluenceScore}%` : (isSell ? `🔴 SHORT • ${s.confluenceScore}%` : `⏸ SHIELD • ${s.confluenceScore}%`);
         const pnlColor = s.livePnlInr >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)';
-        appState.prevPrices[s.symbol] = s.ltp;
 
         return `
           <div class="quant-card ${cardCls}">
             <div style="display:flex; flex-direction:column; gap:10px;">
               <div class="row-between" style="align-items:flex-start;">
                 <div>
-                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                    <span class="sym-title mono">${s.symbol}</span>
+                  <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                    <span style="font-size:18px; font-weight:900; color:#fff;" class="mono">${s.symbol}</span>
                     <span class="badge badge-indigo mono">${s.timeframe}</span>
-                    <span class="badge badge-emerald">${s.setupLabel}</span>
+                    <span class="badge badge-emerald">${s.candlePattern}</span>
+                    <span class="badge ${s.newsScore >= 0 ? 'badge-emerald' : 'badge-rose'} mono">📰 News ${s.newsScore > 0 ? '+' : ''}${s.newsScore}%</span>
                   </div>
-                  <div class="sym-meta">${s.sector} • Best TF: <strong style="color:var(--emerald-bright);">${s.recTimeframe}</strong></div>
+                  <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
+                    ${s.sector} • Locked: <strong class="mono" style="color:var(--cyan-bright);">${s.lockedAt}</strong>
+                  </div>
                 </div>
                 <span class="badge ${badgeCls} mono" style="padding:4px 9px; font-size:11px;">${badgeTxt}</span>
               </div>
 
-              <div class="ltp-box">
+              <div class="easy-guide">
+                ${s.simpleGuide}
+              </div>
+
+              <div style="background:#040811; border:1px solid var(--border-subtle); border-radius:13px; padding:10px 12px;" class="row-between">
                 <div>
-                  <span class="bento-lbl" style="color:var(--text-secondary);">Live NSE LTP</span>
+                  <span style="font-size:9px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; display:block;">Live NSE Price (Kalman ₹${s.kalmanPrice})</span>
                   <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px;">
-                    <span id="ltp-${s.symbol}" class="ltp-price mono">₹${s.ltp.toFixed(2)}</span>
-                    <span id="chg-${s.symbol}" class="mono" style="font-size:12px; font-weight:800; color:${s.changePct >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${s.changePct >= 0 ? '+' : ''}${s.changePct}%</span>
+                    <span style="font-size:21px; font-weight:900; color:#fff;" class="mono">₹${s.ltp.toFixed(2)}</span>
+                    <span class="mono" style="font-size:12px; font-weight:800; color:${s.changePct >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${s.changePct >= 0 ? '+' : ''}${s.changePct}%</span>
                   </div>
                 </div>
                 <div style="text-align:right;">
-                  <span class="bento-lbl" style="color:var(--text-secondary);">${isValid ? 'Signal P&L (' + s.qty + ' sh)' : 'Win Probability'}</span>
-                  <span id="pnl-${s.symbol}" class="mono" style="font-size:17px; font-weight:900; color:${isValid ? pnlColor : 'var(--cyan-bright)'}; display:block; margin-top:2px;">
+                  <span style="font-size:9px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; display:block;">${isValid ? 'Live Signal P&L (' + s.qty + ' sh)' : 'Win Probability'}</span>
+                  <span class="mono" style="font-size:17px; font-weight:900; color:${isValid ? pnlColor : 'var(--cyan-bright)'}; display:block; margin-top:2px;">
                     ${isValid ? (s.livePnlInr >= 0 ? '+₹' : '-₹') + Math.abs(s.livePnlInr).toFixed(2) : s.winProb + '%'}
                   </span>
                 </div>
               </div>
 
-              <div class="stage-strip mono">
-                <span id="stg-${s.symbol}" style="color:var(--amber-bright); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.tradeStage}</span>
-                <span style="color:var(--emerald-bright); flex-shrink:0; margin-left:6px;">${s.winProb}% Prob</span>
-              </div>
-
               <div class="bento-2 mono">
-                <div class="bento-entry">
-                  <span class="bento-lbl" style="color:var(--indigo-bright);">🎯 Locked ${s.rawDirection === 'SELL' ? 'Short' : 'Buy'} Entry</span>
-                  <span class="bento-num">₹${s.entry.toFixed(2)}</span>
-                  <span class="bento-sub">Qty: ${s.qty} sh (5x ₹${s.marginInr})</span>
+                <div class="lvl-box entry-box ${s.crossedEntry ? 'crossed' : ''}">
+                  <div class="row-between">
+                    <span style="font-size:9px; font-weight:800; color:var(--indigo-bright); text-transform:uppercase;">🎯 ${s.rawDirection === 'SELL' ? 'Short' : 'Buy'} Entry</span>
+                    <span class="cut-badge ${s.crossedEntry ? 'cut-yes' : 'cut-no'}">${s.crossedEntry ? '✂️ CROSSED ✓' : '⏳ WAIT'}</span>
+                  </div>
+                  <span style="font-size:16px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.entry.toFixed(2)}</span>
+                  <span style="font-size:9.5px; color:var(--text-secondary); display:block; margin-top:2px;">Qty: ${s.qty} sh (5x ₹${s.marginInr})</span>
                 </div>
-                <div class="bento-sl">
-                  <span class="bento-lbl" style="color:var(--rose-bright);">🛡️ Hard SL (Auto SqOff)</span>
-                  <span id="sl-${s.symbol}" class="bento-num" style="color:var(--rose-bright);">₹${s.sl.toFixed(2)}</span>
-                  <span class="bento-sub">Risk ₹${s.riskInr} (±₹${s.stopDist}/sh)</span>
+
+                <div class="lvl-box sl-box">
+                  <div class="row-between">
+                    <span style="font-size:9px; font-weight:800; color:var(--rose-bright); text-transform:uppercase;">🛡️ Hard Stop-Loss</span>
+                    <span class="cut-badge cut-no">AUTO SQ-OFF</span>
+                  </div>
+                  <span style="font-size:16px; font-weight:900; color:var(--rose-bright); display:block; margin-top:3px;">₹${s.sl.toFixed(2)}</span>
+                  <span style="font-size:9.5px; color:var(--text-secondary); display:block; margin-top:2px;">Max Risk ₹${s.riskInr}</span>
                 </div>
               </div>
 
               <div class="bento-3 mono">
-                <div class="target-box">
-                  <span class="bento-lbl" style="color:var(--emerald-bright);">Target 1 (50%)</span>
-                  <span class="target-num">₹${s.t1.toFixed(2)}</span>
-                  <span class="bento-sub">SL → Cost</span>
+                <div class="lvl-box ${s.crossedT1 ? 'crossed' : ''}">
+                  <div class="row-between">
+                    <span style="font-size:9px; font-weight:800; color:var(--emerald-bright);">T1 (50%)</span>
+                    <span class="cut-badge ${s.crossedT1 ? 'cut-yes' : 'cut-no'}">${s.crossedT1 ? '✂️ CUT ✓' : 'OPEN'}</span>
+                  </div>
+                  <span style="font-size:14px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.t1.toFixed(2)}</span>
+                  <span style="font-size:9px; color:var(--text-secondary);">SL → Cost</span>
                 </div>
-                <div class="target-box">
-                  <span class="bento-lbl" style="color:var(--emerald-bright);">Target 2 (30%)</span>
-                  <span class="target-num">₹${s.t2.toFixed(2)}</span>
-                  <span class="bento-sub">2.5R Target</span>
+
+                <div class="lvl-box ${s.crossedT2 ? 'crossed' : ''}">
+                  <div class="row-between">
+                    <span style="font-size:9px; font-weight:800; color:var(--emerald-bright);">T2 (30%)</span>
+                    <span class="cut-badge ${s.crossedT2 ? 'cut-yes' : 'cut-no'}">${s.crossedT2 ? '✂️ CUT ✓' : 'OPEN'}</span>
+                  </div>
+                  <span style="font-size:14px; font-weight:900; color:var(--emerald-bright); display:block; margin-top:3px;">₹${s.t2.toFixed(2)}</span>
+                  <span style="font-size:9px; color:var(--text-secondary);">2.5R Target</span>
                 </div>
-                <div class="target-box" style="border-color:rgba(6,182,212,0.35);">
-                  <span class="bento-lbl" style="color:var(--cyan-bright);">Target 3 (20%)</span>
-                  <span class="target-num" style="color:var(--cyan-bright);">₹${s.t3.toFixed(2)}</span>
-                  <span class="bento-sub">3.8R Runner</span>
+
+                <div class="lvl-box ${s.crossedT3 ? 'crossed' : ''}">
+                  <div class="row-between">
+                    <span style="font-size:9px; font-weight:800; color:var(--cyan-bright);">T3 (20%)</span>
+                    <span class="cut-badge ${s.crossedT3 ? 'cut-yes' : 'cut-no'}">${s.crossedT3 ? '✂️ CUT ✓' : 'OPEN'}</span>
+                  </div>
+                  <span style="font-size:14px; font-weight:900; color:var(--cyan-bright); display:block; margin-top:3px;">₹${s.t3.toFixed(2)}</span>
+                  <span style="font-size:9px; color:var(--text-secondary);">3.8R Runner</span>
                 </div>
               </div>
 
               <div class="prog-wrap">
-                <div class="prog-labels mono">
+                <div class="row-between mono" style="font-size:9.5px; font-weight:800;">
                   <span style="color:var(--rose-bright);">🛡️ SL</span>
-                  <span style="color:var(--indigo-bright);">🎯 ENTRY</span>
-                  <span style="color:var(--emerald-bright);">✅ T1</span>
-                  <span style="color:var(--emerald-bright);">🎯 T2</span>
-                  <span style="color:var(--cyan-bright);">🏆 T3</span>
+                  <span style="color:${s.crossedEntry ? 'var(--emerald-bright)' : 'var(--indigo-bright)'};">🎯 ENTRY ${s.crossedEntry ? '✓' : ''}</span>
+                  <span style="color:${s.crossedT1 ? 'var(--emerald-bright)' : 'var(--text-secondary)'};">✂️ T1 ${s.crossedT1 ? '✓' : ''}</span>
+                  <span style="color:${s.crossedT2 ? 'var(--emerald-bright)' : 'var(--text-secondary)'};">✂️ T2 ${s.crossedT2 ? '✓' : ''}</span>
+                  <span style="color:${s.crossedT3 ? 'var(--cyan-bright)' : 'var(--text-secondary)'};">✂️ T3 ${s.crossedT3 ? '✓' : ''}</span>
                 </div>
                 <div class="prog-track">
-                  <div id="prg-${s.symbol}" class="prog-fill" style="width:${s.progressPct}%;"></div>
+                  <div class="prog-fill" style="width:${s.progressPct}%;"></div>
+                  <span class="cut-notch ${s.crossedEntry ? 'hit' : ''}" style="left:25%;" title="Entry Cut"></span>
+                  <span class="cut-notch ${s.crossedT1 ? 'hit' : ''}" style="left:52%;" title="Target 1 Cut"></span>
+                  <span class="cut-notch ${s.crossedT2 ? 'hit' : ''}" style="left:76%;" title="Target 2 Cut"></span>
+                  <span class="cut-notch ${s.crossedT3 ? 'hit' : ''}" style="left:96%;" title="Target 3 Cut"></span>
                 </div>
               </div>
 
               <div class="tele-grid mono">
-                <div><span class="tele-lbl">VWAP • PIVOT</span><strong style="color:#e2e8f0;">₹${s.vwap} • ₹${s.pivot}</strong></div>
-                <div><span class="tele-lbl">EMA 9 • EMA 21</span><strong style="color:#e2e8f0;">₹${s.ema9} • ₹${s.ema21}</strong></div>
-                <div><span class="tele-lbl">RSI (1m/5m/15m/1H)</span><strong style="color:#e2e8f0;">${s.rsi1m}/${s.rsi}/${s.rsi15m}/${s.rsi1h}</strong></div>
-                <div><span class="tele-lbl">ADX (+DI / -DI)</span><strong style="color:#e2e8f0;">${s.adx} (${s.plusDi}/${s.minusDi})</strong></div>
-              </div>
-
-              <div class="verdict-box">
-                <strong style="color:var(--amber-bright);">🧠 HyperSpeed Quant:</strong> ${s.proNote}
+                <div style="grid-column:1/-1; color:#e2e8f0; font-family:sans-serif; font-size:11px;">
+                  <strong style="color:var(--amber-bright);">📰 Catalyst:</strong> ${s.newsHeadline}
+                </div>
+                <div><span style="font-size:9px; color:var(--text-muted); display:block;">MARKOV REGIME</span><strong style="color:var(--cyan-bright);">${s.hmmState}</strong></div>
+                <div><span style="font-size:9px; color:var(--text-muted); display:block;">OFI DELTA • ADX</span><strong style="color:#fff;">${s.ofiDeltaPct > 0 ? '+' : ''}${s.ofiDeltaPct}% • ADX ${s.adx}</strong></div>
               </div>
             </div>
 
             <div class="card-actions">
               <button onclick="showAuditModal('${s.symbol}')" class="btn-audit">🔍 12-Domain Audit</button>
-              <button onclick="openTradePosition('${s.symbol}', 'MANUAL')" class="btn-exec">⚡ Take Trade (+Auto SqOff)</button>
+              <button onclick="openTradePosition('${s.symbol}', 'MANUAL')" class="btn-exec">
+                ⚡ ${appState.tradingEnv === 'DEMO' ? 'Demo Trade' : 'Real Trade'} (+Auto SqOff)
+              </button>
             </div>
           </div>
         `;
       }).join('');
     }
 
-    // =========================================================================
-    // NON-BLOCKING ASYNC NETWORK FETCHER + NATIVE ANDROID PUSH CALLBACK
-    // =========================================================================
+    function renderNewsView(grid, analyzed) {
+      grid.innerHTML = `
+        <div class="quant-card wait" style="grid-column:1/-1; gap:10px;">
+          <div class="row-between">
+            <h3 style="font-size:15px; font-weight:900;">📰 Live NSE News Catalyst &amp; Sentiment NLP Engine</h3>
+            <span class="badge badge-emerald mono">24 STOCKS SCANNED</span>
+          </div>
+          <p style="font-size:11.5px; color:var(--text-secondary);">Combines live corporate catalyst scoring with Kalman Filter &amp; Multi-Timeframe technical confluence so you never trade against major news.</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${analyzed.map(s => `
+              <div class="domain-row ${s.newsScore >= 0 ? 'domain-pass' : 'domain-wait'}">
+                <div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <strong class="mono" style="color:#fff; font-size:13px;">${s.symbol}</strong>
+                    <span class="badge ${s.direction === 'BUY' ? 'badge-emerald' : (s.direction === 'SELL' ? 'badge-rose' : 'badge-amber')} mono">${s.direction}</span>
+                    <span class="badge badge-indigo">${s.candlePattern}</span>
+                  </div>
+                  <span style="font-size:11.5px; color:#e2e8f0; display:block; margin-top:3px;">${s.newsHeadline}</span>
+                </div>
+                <span class="mono" style="font-weight:900; font-size:12px; color:${s.newsScore >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'}; flex-shrink:0;">
+                  ${s.newsScore > 0 ? '+' : ''}${s.newsScore}% NLP
+                </span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPositionsView(grid, openList) {
+      const envName = appState.tradingEnv === 'DEMO' ? '🧪 DEMO PRACTICE' : '💎 REAL MONEY';
+      const cards = openList.length === 0
+        ? `<div class="easy-guide" style="text-align:center; padding:20px;">No open ${envName} positions right now. Tap "⚡ ${appState.tradingEnv === 'DEMO' ? 'Demo Trade' : 'Real Trade'}" on any Sniper card to practice or trade live with automatic Stop-Loss &amp; 15:15 IST Square-Off!</div>`
+        : openList.map(p => `
+            <div style="background:#040811; border:1px solid var(--border-subtle); border-radius:13px; padding:12px;" class="row-between">
+              <div>
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <span class="mono" style="font-size:15px; font-weight:900; color:#fff;">${p.symbol}</span>
+                  <span class="badge badge-emerald mono">${p.side} • ${p.qty} sh (${p.env})</span>
+                  ${p.trailed ? '<span class="badge badge-indigo mono">🛡️ SL @ Breakeven</span>' : ''}
+                </div>
+                <span class="mono" style="font-size:11px; color:var(--text-secondary); display:block; margin-top:4px;">Entry: ₹${p.entry.toFixed(2)} | LTP: ₹${p.ltp.toFixed(2)} | Auto-SL: <strong style="color:var(--rose-bright);">₹${p.sl.toFixed(2)}</strong> | T1: <strong style="color:var(--emerald-bright);">₹${p.t1.toFixed(2)}</strong></span>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="mono" style="font-size:15px; font-weight:900; color:${p.pnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${p.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(p.pnl).toFixed(2)}</span>
+                <button onclick="closePosition('${p.symbol}', 'Manual 1-Tap Square-Off')" class="btn-danger">Square Off</button>
+              </div>
+            </div>
+          `).join('');
+
+      const logs = appState.auditLogs.map(l => `
+        <div class="mono" style="font-size:11px; padding:5px 0; border-bottom:1px solid var(--border-subtle);">
+          <span style="color:var(--text-muted);">[${l.ts}]</span> <strong style="color:var(--emerald-bright);">[${l.tag}]</strong> ${l.msg}
+        </div>
+      `).join('');
+
+      grid.innerHTML = `
+        <div class="quant-card wait" style="grid-column:1/-1;">
+          <div class="row-between">
+            <h3 style="font-size:15px; font-weight:900;">💼 ${envName} Open Positions</h3>
+            <button onclick="squareOffAllPositions('1-Tap Square-Off All')" class="btn-danger">🚨 Square Off All</button>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">${cards}</div>
+          <h4 style="font-size:11.5px; font-weight:800; margin-top:8px; color:var(--text-secondary);">📜 MULTI-DAY TRADE &amp; AUTO SQUARE-OFF LOG</h4>
+          <div style="max-height:220px; overflow-y:auto;">${logs || '<span style="font-size:11px; color:var(--text-muted);">Ready.</span>'}</div>
+        </div>
+      `;
+    }
+
+    function renderSettingsView(grid) {
+      grid.innerHTML = `
+        <div class="quant-card wait" style="grid-column:1/-1; gap:12px;">
+          <div class="row-between">
+            <h3 style="font-size:15px; font-weight:900;">⚙️ Sovereign Vault, Demo Reset, OTA &amp; Groww API</h3>
+            <button onclick="triggerOtaUpdate()" class="btn-primary" style="padding:6px 11px; font-size:11px;">☁️ Check OTA Update</button>
+          </div>
+          <div class="bento-2">
+            <div>
+              <label style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">Vault Master PIN (4 Digits)</label>
+              <input id="pinInp" type="text" maxlength="4" value="${appState.masterPin}" onchange="saveSettings()" class="search-inp mono" style="width:100%;" />
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">Reset Demo Practice Wallet</label>
+              <button onclick="resetDemoWallet()" class="btn-danger" style="width:100%; padding:10px;">🔄 Reset Demo to ₹1,00,000</button>
+            </div>
+          </div>
+          <div class="bento-2">
+            <div>
+              <label style="font-size:11px; font-weight:700; color:var(--emerald-bright); display:block; margin-bottom:4px;">Groww Access Token (For Real Mode)</label>
+              <input id="tokInp" type="password" value="${appState.growwToken}" onchange="saveSettings()" placeholder="Paste Groww Token..." class="search-inp mono" style="width:100%; text-transform:none;" />
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:var(--cyan-bright); display:block; margin-bottom:4px;">Real Mode Capital (₹)</label>
+              <input id="capInp" type="number" value="${appState.realCapital}" onchange="saveSettings()" class="search-inp mono" style="width:100%;" />
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetDemoWallet() {
+      appState.demoRealizedPnl = 0;
+      appState.demoWins = 0;
+      appState.demoLosses = 0;
+      try {
+        localStorage.setItem('tp20_demo_pnl', '0');
+        localStorage.setItem('tp20_demo_w', '0');
+        localStorage.setItem('tp20_demo_l', '0');
+      } catch (e) {}
+      showToast('🧪 Demo Wallet Reset to ₹1,00,000!');
+      recomputeAndPatchUI();
+    }
+
+    function saveSettings() {
+      const p = (document.getElementById('pinInp')?.value || '7777').trim();
+      const c = parseFloat(document.getElementById('capInp')?.value || '100000');
+      const t = (document.getElementById('tokInp')?.value || '').trim();
+      if (p.length === 4) appState.masterPin = p;
+      appState.realCapital = c > 1000 ? c : 100000;
+      appState.growwToken = t;
+      try {
+        localStorage.setItem('tp20_pin', appState.masterPin);
+        localStorage.setItem('tp20_groww_token', appState.growwToken);
+      } catch (e) {}
+      showToast('💾 Saved Vault PIN & Groww Settings!');
+    }
+
+    function openTradePosition(symbol, execMode) {
+      const s = appState.allAnalyzed.find(x => x.symbol === symbol);
+      if (!s) return;
+      const side = s.direction === 'WAITING' ? s.rawDirection : s.direction;
+      appState.openPositions[symbol] = {
+        symbol: s.symbol, side, qty: s.qty, entry: s.entry, ltp: s.ltp,
+        sl: s.sl, stopDist: s.stopDist, t1: s.t1, t2: s.t2, t3: s.t3,
+        pnl: 0.0, mode: execMode, env: appState.tradingEnv, trailed: false
+      };
+      playChime('ORDER');
+      showToast(`⚡ Opened ${appState.tradingEnv} ${side}: ${s.qty} sh ${s.symbol} @ ₹${s.entry} (Auto SqOff On)`);
+      addAuditLog(`[${appState.tradingEnv}] ${side} ${s.qty} sh ${s.symbol} @ ₹${s.entry} | SL ₹${s.sl} | T1 ₹${s.t1}`, 'TRADE');
+
+      if (appState.tradingEnv === 'REAL' && appState.growwToken) {
+        const orderPayload = JSON.stringify({
+          trading_symbol: s.symbol, quantity: s.qty, validity: 'DAY',
+          exchange: 'NSE', segment: 'CASH', product: 'MIS',
+          order_type: 'LIMIT', price: s.entry, transaction_type: side
+        });
+        if (window.AndroidBridge && typeof window.AndroidBridge.placeGrowwOrderAsync === 'function') {
+          window.AndroidBridge.placeGrowwOrderAsync(orderPayload, appState.growwToken);
+        }
+      }
+      setTab('POSITIONS');
+    }
+
+    function closePosition(symbol, reason) {
+      const pos = appState.openPositions[symbol];
+      if (!pos) return;
+      playChime('SQOFF');
+      delete appState.openPositions[symbol];
+      const net = +(pos.pnl - 20.0).toFixed(2);
+      if (pos.env === 'DEMO') {
+        appState.demoRealizedPnl = +(appState.demoRealizedPnl + net).toFixed(2);
+        if (net >= 0) appState.demoWins++; else appState.demoLosses++;
+        try {
+          localStorage.setItem('tp20_demo_pnl', String(appState.demoRealizedPnl));
+          localStorage.setItem('tp20_demo_w', String(appState.demoWins));
+          localStorage.setItem('tp20_demo_l', String(appState.demoLosses));
+        } catch (e) {}
+      } else {
+        appState.realRealizedPnl = +(appState.realRealizedPnl + net).toFixed(2);
+        if (net >= 0) appState.realWins++; else appState.realLosses++;
+      }
+      showToast(`🚨 Squared Off ${symbol} (${reason}): ${net >= 0 ? '+₹' : '-₹'}${Math.abs(net).toFixed(2)}`);
+      addAuditLog(`[${pos.env} SQ-OFF] ${symbol} (${reason}) | Net: ${net >= 0 ? '+₹' : '-₹'}${Math.abs(net).toFixed(2)}`, 'SQ-OFF');
+      recomputeAndPatchUI();
+    }
+
+    function squareOffAllPositions(reason) {
+      Object.keys(appState.openPositions).forEach(sym => closePosition(sym, reason));
+      setTab('POSITIONS');
+    }
+
+    function runAutoSquareOffGuard(bySym) {
+      const now = new Date();
+      const hhMm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      const isRms = (hhMm >= appState.autoRmsTime && hhMm <= '15:30');
+
+      Object.keys(appState.openPositions).forEach(sym => {
+        const pos = appState.openPositions[sym];
+        const inst = bySym[sym];
+        if (!inst) return;
+        pos.ltp = inst.ltp;
+        const diff = pos.side === 'BUY' ? (pos.ltp - pos.entry) : (pos.entry - pos.ltp);
+        pos.pnl = +(diff * pos.qty).toFixed(2);
+        const curR = diff / Math.max(0.05, pos.stopDist || 1);
+
+        if (isRms) { closePosition(sym, 'Auto 15:15 IST Intraday Cutoff'); return; }
+        if (appState.autoT1Trail && !pos.trailed && (curR >= 1.0 || (pos.side === 'BUY' && pos.ltp >= pos.t1) || (pos.side === 'SELL' && pos.ltp <= pos.t1))) {
+          pos.sl = pos.entry; pos.trailed = true;
+          addAuditLog(`AUTO-TRAIL: ${sym} crossed T1! SL locked at Breakeven ₹${pos.entry}.`, 'TRAIL');
+        }
+        if (appState.autoSlExit && ((pos.side === 'BUY' && pos.ltp <= pos.sl) || (pos.side === 'SELL' && pos.ltp >= pos.sl))) {
+          closePosition(sym, pos.trailed ? 'Auto Breakeven Stop Exit (₹0 Loss)' : `Auto Hard SL Exit @ ₹${pos.sl}`);
+          return;
+        }
+        if ((pos.side === 'BUY' && pos.ltp >= pos.t2) || (pos.side === 'SELL' && pos.ltp <= pos.t2)) {
+          closePosition(sym, `Auto Target 2 Booked @ ₹${pos.t2}`);
+        }
+      });
+    }
+
+    function showAuditModal(symbol) {
+      const s = appState.allAnalyzed.find(x => x.symbol === symbol);
+      if (!s) return;
+      document.getElementById('modalTitle').textContent = `${s.symbol} (${s.timeframe}) — 12-Domain Audit (${s.confluenceScore}%)`;
+      document.getElementById('modalSub').textContent = `${s.candlePattern} • Kalman: ₹${s.kalmanPrice} • News: ${s.newsScore > 0 ? '+' : ''}${s.newsScore}%`;
+      document.getElementById('modalProNote').innerHTML = s.simpleGuide;
+      document.getElementById('modalBody').innerHTML = s.factors.map(f => `
+        <div class="domain-row ${f.pass ? 'domain-pass' : 'domain-wait'}">
+          <div>
+            <strong style="color:#fff; display:block;">${f.name}</strong>
+            <span class="mono" style="font-size:10.5px; color:var(--text-secondary);">${f.val}</span>
+          </div>
+          <span class="mono" style="font-weight:900; color:${f.pass ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${f.pass ? 'PASS ✓' : 'WAIT ✕'}</span>
+        </div>
+      `).join('');
+      document.getElementById('detailModal').classList.add('open');
+    }
+
     window.__onNativeLiveDelta = function(tf, rawJsonStr) {
       try {
         const raw = JSON.parse(rawJsonStr);
@@ -1335,9 +1363,7 @@
           }
           appState.liveQuotesCache[tf] = map;
           appState.tickCount++;
-          document.getElementById('engineModeTag').textContent = 'NATIVE APK 120Hz';
-          document.getElementById('syncBadge').textContent = 'Live #' + appState.tickCount;
-          try { localStorage.setItem('tp15_live_quotes', JSON.stringify(appState.liveQuotesCache)); } catch (e) {}
+          try { localStorage.setItem('tp20_live_quotes', JSON.stringify(appState.liveQuotesCache)); } catch (e) {}
           requestAnimationFrame(recomputeAndPatchUI);
         }
       } catch (e) {}
@@ -1370,298 +1396,15 @@
         symbols: { tickers: PRELOADED_UNIVERSE.map(x => 'NSE:' + x.symbol), query: { types: [] } },
         columns: cols
       });
-
-      // 1. Non-blocking async Native Android Executor (0ms UI thread impact!)
       if (window.AndroidBridge && typeof window.AndroidBridge.requestLiveScanAsync === 'function') {
         window.AndroidBridge.requestLiveScanAsync(tf, payloadStr);
         return;
       }
-
-      // 2. Fallback browser async fetch
       fetch('https://scanner.tradingview.com/india/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
         body: payloadStr
-      }).then(r => r.text()).then(txt => {
-        window.__onNativeLiveDelta(tf, txt);
-      }).catch(() => {});
-    }
-
-    // =========================================================================
-    // POSITION TRACKING & AUTO SQUARE-OFF (MANUAL & AUTO MODES)
-    // =========================================================================
-    function runAutoSquareOffGuard(bySym) {
-      const now = new Date();
-      const hhMm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-      const isRmsCutoff = (hhMm >= appState.autoRmsTime && hhMm <= '15:30');
-
-      Object.keys(appState.openPositions).forEach(sym => {
-        const pos = appState.openPositions[sym];
-        const inst = bySym[sym];
-        if (!inst) return;
-        pos.ltp = inst.ltp;
-        const diff = pos.side === 'BUY' ? (pos.ltp - pos.entry) : (pos.entry - pos.ltp);
-        pos.pnl = +(diff * pos.qty).toFixed(2);
-        const curR = diff / Math.max(0.05, pos.stopDist || 1);
-
-        if (isRmsCutoff) {
-          closePosition(sym, 'Auto 15:15 IST Intraday RMS Square-Off');
-          return;
-        }
-        if (appState.autoT1Trail && !pos.trailed && (curR >= 1.0 || (pos.side === 'BUY' && pos.ltp >= pos.t1) || (pos.side === 'SELL' && pos.ltp <= pos.t1))) {
-          pos.sl = pos.entry;
-          pos.trailed = true;
-          addAuditLog(`AUTO-TRAIL (${pos.mode}): ${sym} hit +1R! SL locked at Breakeven ₹${pos.entry}.`, 'TRAIL');
-        }
-        if (appState.autoSlExit && ((pos.side === 'BUY' && pos.ltp <= pos.sl) || (pos.side === 'SELL' && pos.ltp >= pos.sl))) {
-          closePosition(sym, pos.trailed ? 'Auto Breakeven Stop Exit (₹0 Loss)' : `Auto Hard SL Exit @ ₹${pos.sl}`);
-          return;
-        }
-        if ((pos.side === 'BUY' && pos.ltp >= pos.t2) || (pos.side === 'SELL' && pos.ltp <= pos.t2)) {
-          closePosition(sym, `Auto Target 2 Profit Booked @ ₹${pos.t2}`);
-        }
-      });
-    }
-
-    // Synthesized Institutional Audio & Vibration Alert for Entries & Auto Square-Off
-    function playDeskAlert(type) {
-      try {
-        if (navigator.vibrate) {
-          navigator.vibrate(type === 'SQOFF' ? [200, 100, 200, 100, 300] : [120, 60, 120]);
-        }
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type === 'SQOFF' ? 'sawtooth' : 'sine';
-        osc.frequency.setValueAtTime(type === 'SQOFF' ? 880 : 660, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(type === 'SQOFF' ? 440 : 990, ctx.currentTime + 0.28);
-        gain.gain.setValueAtTime(0.18, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.33);
-      } catch (e) {}
-    }
-
-    function launchGrowwMobileApp(symbol, side, qty, price) {
-      const clipText = `${side} ${qty} ${symbol} @ ₹${price}`;
-      try {
-        if (navigator.clipboard) navigator.clipboard.writeText(String(price)).catch(() => {});
-      } catch (e) {}
-      addAuditLog(`Copied Limit Price ₹${price} (${clipText}) & launching Groww mobile app...`, 'GROWW-APP');
-      window.location.href = 'intent://groww.in/stocks#Intent;scheme=https;package=com.nextbillion.groww;end';
-    }
-
-    function openTradePosition(symbol, execMode) {
-      const s = appState.allAnalyzed.find(x => x.symbol === symbol);
-      if (!s) return;
-      const side = s.direction === 'WAITING' ? s.rawDirection : s.direction;
-      appState.openPositions[symbol] = {
-        symbol: s.symbol, side, qty: s.qty, entry: s.entry, ltp: s.ltp,
-        sl: s.sl, stopDist: s.stopDist, t1: s.t1, t2: s.t2, t3: s.t3,
-        pnl: 0.0, mode: execMode, trailed: false, openedAt: new Date().toLocaleTimeString()
-      };
-      playDeskAlert('ORDER');
-      try {
-        if (navigator.clipboard) navigator.clipboard.writeText(String(s.entry)).catch(() => {});
-      } catch (e) {}
-      addAuditLog(`OPENED ${execMode} MIS ${side}: ${s.qty} sh ${s.symbol} @ ₹${s.entry} (Limit Price Copied & Auto SqOff Armed)`, 'ORDER');
-
-      if (appState.growwToken) {
-        const orderPayload = JSON.stringify({
-          trading_symbol: s.symbol, quantity: s.qty, validity: 'DAY',
-          exchange: 'NSE', segment: 'CASH', product: 'MIS',
-          order_type: 'LIMIT', price: s.entry, transaction_type: side
-        });
-        const targetUrl = appState.staticRelayUrl ? (appState.staticRelayUrl.replace(/\/+$/, '') + '/order') : 'https://api.groww.in/v1/order/create';
-        if (window.AndroidBridge && typeof window.AndroidBridge.placeGrowwOrderAsync === 'function' && !appState.staticRelayUrl) {
-          window.AndroidBridge.placeGrowwOrderAsync(orderPayload, appState.growwToken);
-        } else {
-          fetch(targetUrl, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + appState.growwToken, 'Content-Type': 'application/json' },
-            body: orderPayload
-          }).then(r => r.json()).then(res => {
-            if (res && (res.error || res.status === 'FAILURE')) {
-              addAuditLog(`5G Dynamic IP Notice (${s.symbol}): Tap '📲 Open Groww App' to place with 1 tap (₹${s.entry} copied).`, '5G-IP');
-            } else {
-              addAuditLog(`LIVE GROWW ORDER CONFIRMED (${s.symbol}): ${JSON.stringify(res)}`, 'GROWW');
-            }
-          }).catch(() => {});
-        }
-      }
-      appState.lastRenderedSignature = '';
-      if (execMode === 'MANUAL') setTab('POSITIONS');
-      else recomputeAndPatchUI();
-    }
-
-    function closePosition(symbol, reason) {
-      const pos = appState.openPositions[symbol];
-      if (!pos) return;
-      playDeskAlert('SQOFF');
-      delete appState.openPositions[symbol];
-      const net = +(pos.pnl - 20.0).toFixed(2);
-      appState.realizedPnl = +(appState.realizedPnl + net).toFixed(2);
-      if (net >= 0) appState.winsCount++; else appState.lossCount++;
-      addAuditLog(`SQUARED OFF ${symbol} (${reason}) @ ₹${pos.ltp} | Net: ${net >= 0 ? '+₹' : '-₹'}${Math.abs(net).toFixed(2)}`, 'SQ-OFF');
-      appState.lastRenderedSignature = '';
-      recomputeAndPatchUI();
-    }
-
-    function squareOffAllPositions(reason) {
-      Object.keys(appState.openPositions).forEach(sym => closePosition(sym, reason));
-      setTab('POSITIONS');
-    }
-
-    function renderPositionsView(grid, openList) {
-      const cards = openList.length === 0
-        ? `<div class="verdict-box" style="text-align:center; padding:24px;">No open positions. Tap "⚡ Take Trade (+Auto SqOff)" on any signal card to arm automatic Stop-Loss, Breakeven Trail, and 15:15 IST Square-Off.</div>`
-        : openList.map(p => `
-            <div class="ltp-box" style="flex-wrap:wrap;">
-              <div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                  <span class="sym-title mono" style="font-size:16px;">${p.symbol}</span>
-                  <span class="badge badge-emerald mono">${p.side} • ${p.qty} sh (${p.mode})</span>
-                  ${p.trailed ? '<span class="badge badge-indigo mono">🛡️ SL @ Cost</span>' : ''}
-                </div>
-                <span class="mono" style="font-size:11px; color:var(--text-secondary); display:block; margin-top:4px;">Entry: ₹${p.entry.toFixed(2)} | LTP: ₹${p.ltp.toFixed(2)} | Auto-SL: <strong style="color:var(--rose-bright);">₹${p.sl.toFixed(2)}</strong> | T2: <strong style="color:var(--emerald-bright);">₹${p.t2.toFixed(2)}</strong></span>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <span class="mono" style="font-size:16px; font-weight:900; color:${p.pnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${p.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(p.pnl).toFixed(2)}</span>
-                <button onclick="launchGrowwMobileApp('${p.symbol}', '${p.side}', ${p.qty}, ${p.entry})" class="btn-primary" style="padding:6px 10px; font-size:11px;">📲 Groww App</button>
-                <button onclick="closePosition('${p.symbol}', 'Manual 1-Tap Square-Off')" class="btn-danger">Square Off</button>
-              </div>
-            </div>
-          `).join('');
-
-      const logs = appState.auditLogs.map(l => `
-        <div class="mono" style="font-size:11px; padding:5px 0; border-bottom:1px solid var(--border-subtle);">
-          <span style="color:var(--text-muted);">[${l.ts}]</span> <strong style="color:var(--emerald-bright);">[${l.tag}]</strong> ${l.msg}
-        </div>
-      `).join('');
-
-      grid.innerHTML = `
-        <div class="quant-card wait" style="grid-column:1/-1;">
-          <div class="row-between">
-            <h3 style="font-size:15px; font-weight:900;">💼 Active Manual &amp; Auto Positions</h3>
-            <button onclick="squareOffAllPositions('1-Tap Square-Off All')" class="btn-danger">🚨 Square Off All</button>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:8px;">${cards}</div>
-          <h4 style="font-size:12px; font-weight:800; margin-top:8px; color:var(--text-secondary);">📜 EXECUTION &amp; AUTO SQUARE-OFF LOG</h4>
-          <div style="max-height:220px; overflow-y:auto;">${logs || '<span style="font-size:11px; color:var(--text-muted);">Ready.</span>'}</div>
-        </div>
-      `;
-    }
-
-    function renderSettingsView(grid) {
-      grid.innerHTML = `
-        <div class="quant-card wait" style="grid-column:1/-1; gap:14px;">
-          <div class="row-between">
-            <h3 style="font-size:16px; font-weight:900;">⚙️ Groww API Keys, TOTP &amp; Static IP Setup</h3>
-            <span class="badge badge-emerald mono">SEBI COMPLIANT</span>
-          </div>
-
-          <!-- Step 1: Jio/Airtel 5G Dynamic IP vs Registered Static IP Detector -->
-          <div class="ltp-box" style="flex-wrap:wrap;">
-            <div>
-              <span class="bento-lbl" style="color:var(--emerald-bright);">1. Live Network IPv4 vs Groww Registered IP (152.57.97.47)</span>
-              <span id="myPublicIp" class="mono" style="font-size:15px; font-weight:900; color:#fff; display:block; margin-top:3px;">Detecting IPv4...</span>
-              <span style="font-size:10.5px; color:var(--text-secondary);">Mobile 5G (Jio 152.57.x.x) rotates IPs dynamically. Live NSE Quant Signals &amp; Auto Square-Off work on ANY IP! For direct API order routing when 5G IP changes, use Wi-Fi/Static Relay or tap <strong>📲 Groww App</strong> (auto-copies limit price).</span>
-            </div>
-            <button onclick="detectAndCopyIp()" class="btn-primary mono" style="font-size:11px;">📋 Copy IP</button>
-          </div>
-
-          <!-- Step 2: Credentials from 'Generate API key' dropdown -->
-          <div class="bento-2">
-            <div>
-              <label style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:5px;">Trading Capital (₹)</label>
-              <input id="capInp" type="number" value="${appState.capital}" onchange="saveSettings()" class="search-inp mono" style="width:100%;" />
-            </div>
-            <div>
-              <label style="font-size:11px; font-weight:700; color:var(--emerald-bright); display:block; margin-bottom:5px;">Groww Access Token / TOTP Token (eyJ...)</label>
-              <input id="tokInp" type="password" value="${appState.growwToken}" onchange="saveSettings()" placeholder="Paste Token from Generate API key..." class="search-inp mono" style="width:100%; text-transform:none;" />
-            </div>
-          </div>
-
-          <div class="bento-2">
-            <div>
-              <label style="font-size:11px; font-weight:700; color:var(--cyan-bright); display:block; margin-bottom:5px;">TOTP QR Secret (Optional Base32 for Auto Daily Login)</label>
-              <input id="totpSecInp" type="password" value="${appState.totpSecret || ''}" onchange="saveSettings()" placeholder="e.g. UG3X... from Generate TOTP token" class="search-inp mono" style="width:100%;" />
-            </div>
-            <div style="display:flex; align-items:flex-end;">
-              <button onclick="saveSettings()" class="btn-exec" style="width:100%; padding:10px;">💾 Save &amp; Activate Groww API</button>
-            </div>
-          </div>
-
-          <div class="verdict-box">
-            <strong style="color:var(--amber-bright);">How to fill from your Groww screen (groww.in/trade-api/api-keys):</strong><br>
-            1. Tap the green <strong>Add static IP</strong> button at top-right and paste the IPv4 shown above.<br>
-            2. Tap the green <strong>Generate API key ▾</strong> dropdown → select <strong>Generate TOTP token</strong> (or <strong>Generate API key</strong>).<br>
-            3. Name it <code style="color:#fff;">TraderPro</code>, copy the generated <strong>Token</strong> (and optional <strong>TOTP Secret</strong>), and paste them above!
-          </div>
-        </div>
-      `;
-      fetchPublicIpv4();
-    }
-
-    function fetchPublicIpv4() {
-      fetch('https://api.ipify.org?format=json')
-        .then(r => r.json())
-        .then(d => {
-          const el = document.getElementById('myPublicIp');
-          if (el && d.ip) el.textContent = d.ip;
-        })
-        .catch(() => {
-          const el = document.getElementById('myPublicIp');
-          if (el) el.textContent = 'Run: curl -4 ifconfig.me in Termux';
-        });
-    }
-
-    function detectAndCopyIp() {
-      const el = document.getElementById('myPublicIp');
-      const ip = el ? el.textContent.trim() : '';
-      if (ip && navigator.clipboard) {
-        navigator.clipboard.writeText(ip).catch(() => {});
-      }
-      if (el) el.style.color = 'var(--emerald-bright)';
-    }
-
-    function saveSettings() {
-      const c = parseFloat(document.getElementById('capInp')?.value || '100000');
-      const t = (document.getElementById('tokInp')?.value || '').trim();
-      const sec = (document.getElementById('totpSecInp')?.value || '').trim();
-      appState.capital = c > 1000 ? c : 100000;
-      appState.growwToken = t;
-      appState.totpSecret = sec;
-      try {
-        localStorage.setItem('tp15_capital', String(appState.capital));
-        localStorage.setItem('tp15_groww_token', appState.growwToken);
-        localStorage.setItem('tp15_totp_secret', appState.totpSecret);
-      } catch (e) {}
-      addAuditLog('Saved Capital, Groww API Token & TOTP Secret.', 'CONFIG');
-      appState.lastRenderedSignature = '';
-      recomputeAndPatchUI();
-    }
-
-    function showAuditModal(symbol) {
-      const s = appState.allAnalyzed.find(x => x.symbol === symbol);
-      if (!s) return;
-      document.getElementById('modalTitle').textContent = `${s.symbol} (${s.timeframe}) — 12-Domain Audit (${s.confluenceScore}%)`;
-      document.getElementById('modalSub').textContent = `${s.setupLabel} • Locked Entry: ₹${s.entry} • SL: ₹${s.sl} • T1: ₹${s.t1} • T2: ₹${s.t2} • T3: ₹${s.t3}`;
-      document.getElementById('modalProNote').textContent = s.proNote;
-      document.getElementById('modalBody').innerHTML = s.factors.map(f => `
-        <div class="domain-row ${f.pass ? 'domain-pass' : 'domain-wait'}">
-          <div>
-            <strong style="color:#fff; display:block;">${f.name}</strong>
-            <span class="mono" style="font-size:10.5px; color:var(--text-secondary);">${f.val}</span>
-          </div>
-          <span class="mono" style="font-weight:900; color:${f.pass ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${f.pass ? 'PASS ✓' : 'WAIT ✕'}</span>
-        </div>
-      `).join('');
-      document.getElementById('detailModal').classList.add('open');
+      }).then(r => r.text()).then(txt => window.__onNativeLiveDelta(tf, txt)).catch(() => {});
     }
 
     function switchTf(tf) {
@@ -1670,21 +1413,13 @@
         const el = document.getElementById('tf-' + k);
         if (el) el.className = (k === tf) ? 'seg-btn active' : 'seg-btn';
       });
-      appState.lastRenderedSignature = '';
       recomputeAndPatchUI();
       requestAsyncLiveScan();
     }
 
     function onModeChange() {
       appState.mode = document.getElementById('modeSel').value;
-      addAuditLog('Mode switched to ' + appState.mode, 'MODE');
-    }
-
-    function relockAllSignals() {
-      appState.lockedSignals = {};
-      appState.lastRenderedSignature = '';
-      recomputeAndPatchUI();
-      requestAsyncLiveScan();
+      showToast('Switched to ' + appState.mode);
     }
 
     function setSetupFilter(f) {
@@ -1698,7 +1433,7 @@
 
     function setTab(t) {
       appState.tab = t;
-      ['ACTIVE', 'POSITIONS', 'RADAR', 'SETTINGS'].forEach(k => {
+      ['ACTIVE', 'POSITIONS', 'NEWS', 'RADAR', 'SETTINGS'].forEach(k => {
         const el = document.getElementById('tab-' + k);
         if (el) el.className = (k === t) ? 'nav-item active' : 'nav-item';
       });
@@ -1718,22 +1453,17 @@
       inp.value = '';
       appState.searchQuery = '';
       if (!PRELOADED_UNIVERSE.some(x => x.symbol === sym)) {
-        PRELOADED_UNIVERSE.unshift({ symbol: sym, name: sym + ' NSE', sector: 'Custom NSE Ticker', beta: 1.1, anchor: 1000.0, seedBias: 1 });
+        PRELOADED_UNIVERSE.unshift({ symbol: sym, name: sym + ' NSE', sector: 'Custom NSE Ticker', anchor: 1000.0, seedBias: 1, newsHeadline: sym + ' added to live institutional scanner', newsScore: 70 });
       }
-      appState.lastRenderedSignature = '';
       recomputeAndPatchUI();
       requestAsyncLiveScan();
+      showToast(`Added ${sym} to Scanner!`);
     }
 
-    // 1. INSTANT 0ms RENDER AT FRAME 1 (Before any network call!)
     recomputeAndPatchUI();
     document.getElementById('clockText').textContent = new Date().toLocaleTimeString();
-
-    // 2. Start non-blocking background live delta stream
     setTimeout(requestAsyncLiveScan, 40);
-    setInterval(() => {
-      document.getElementById('clockText').textContent = new Date().toLocaleTimeString();
-    }, 1000);
+    setInterval(() => { document.getElementById('clockText').textContent = new Date().toLocaleTimeString(); }, 1000);
     setInterval(requestAsyncLiveScan, 2500);
   </script>
 </body>

@@ -8,17 +8,28 @@ android {
         applicationId "com.traderpro.app"
         minSdk 24
         targetSdk 34
-        versionCode 15
-        versionName "15.0-HyperSpeed"
+        versionCode 2000
+        versionName "20.0-Sovereign"
+    }
+    signingConfigs {
+        persistentKey {
+            storeFile file("traderpro.keystore")
+            storePassword "traderpro123"
+            keyAlias "traderpro"
+            keyPassword "traderpro123"
+        }
     }
     buildTypes {
         debug {
-            debuggable true
+            signingConfig signingConfigs.persistentKey
         }
         release {
             minifyEnabled false
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.persistentKey
         }
+    }
+    androidResources {
+        noCompress 'bin', 'dat'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

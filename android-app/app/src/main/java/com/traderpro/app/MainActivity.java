@@ -8,6 +8,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -32,15 +34,18 @@ public class MainActivity extends Activity {
         s.setDatabaseEnabled(true);
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
-        s.setCacheMode(WebSettings.LOAD_DEFAULT);
-        s.setRenderPriority(WebSettings.RenderPriority.HIGH);
+        s.setAllowUniversalAccessFromFileURLs(true);
 
         webView.addJavascriptInterface(new NativeAsyncBridge(), "AndroidBridge");
         webView.setWebViewClient(new WebViewClient());
         setContentView(webView);
 
-        // Instant 0ms local asset load (Zero network block on startup!)
-        webView.loadUrl("file:///android_asset/index.html");
+        File otaFile = new File(getFilesDir(), "ota_index.html");
+        if (otaFile.exists() && otaFile.length() > 10000) {
+            webView.loadUrl("file://" + otaFile.getAbsolutePath());
+        } else {
+            webView.loadUrl("file:///android_asset/index.html");
+        }
     }
 
     public class NativeAsyncBridge {
@@ -59,7 +64,6 @@ public class MainActivity extends Activity {
                         conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
                         conn.setRequestProperty("Origin", "https://in.tradingview.com");
                         conn.setRequestProperty("Referer", "https://in.tradingview.com/");
-                        conn.setRequestProperty("Connection", "keep-alive");
                         conn.setDoOutput(true);
 
                         byte[] body = jsonPayload.getBytes(StandardCharsets.UTF_8);
@@ -70,14 +74,10 @@ public class MainActivity extends Activity {
                         StringBuilder sb = new StringBuilder(8192);
                         try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
                             String line;
-                            while ((line = br.readLine()) != null) {
-                                sb.append(line);
-                            }
+                            while ((line = br.readLine()) != null) sb.append(line);
                         }
-                        final String resStr = sb.toString();
-                        final String safeJson = org.json.JSONObject.quote(resStr);
+                        final String safeJson = org.json.JSONObject.quote(sb.toString());
                         final String safeTf = org.json.JSONObject.quote(tf);
-
                         webView.post(new Runnable() {
                             @Override
                             public void run() {
@@ -88,6 +88,61 @@ public class MainActivity extends Activity {
                     } finally {
                         if (conn != null) conn.disconnect();
                     }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void performOtaUpdateAsync(final String rawUrl) {
+            networkPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    if (rawUrl == null || !rawUrl.startsWith("http")) {
+                        notifyOta("✅ Running Latest Sovereign v20 Build!");
+                        return;
+                    }
+                    HttpURLConnection conn = null;
+                    try {
+                        URL url = new URL(rawUrl + "?t=" + System.currentTimeMillis());
+                        conn = (HttpURLConnection) url.openConnection();
+                        conn.setConnectTimeout(6000);
+                        conn.setReadTimeout(6000);
+                        StringBuilder sb = new StringBuilder(65536);
+                        try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = br.readLine()) != null) sb.append(line).append("\n");
+                        }
+                        String html = sb.toString();
+                        if (html.length() > 10000 && html.contains("TraderPro")) {
+                            final File otaFile = new File(getFilesDir(), "ota_index.html");
+                            try (FileOutputStream fos = new FileOutputStream(otaFile)) {
+                                fos.write(html.getBytes(StandardCharsets.UTF_8));
+                            }
+                            webView.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    webView.evaluateJavascript("window.__onOtaStatus('✅ OTA Update Applied Live! Reloading...');", null);
+                                    webView.loadUrl("file://" + otaFile.getAbsolutePath());
+                                }
+                            });
+                        } else {
+                            notifyOta("✅ Already on Latest Version!");
+                        }
+                    } catch (Exception e) {
+                        notifyOta("ℹ️ OTA Check: Already up to date.");
+                    } finally {
+                        if (conn != null) conn.disconnect();
+                    }
+                }
+            });
+        }
+
+        private void notifyOta(final String msg) {
+            final String q = org.json.JSONObject.quote(msg);
+            webView.post(new Runnable() {
+                @Override
+                public void run() {
+                    webView.evaluateJavascript("window.__onOtaStatus(" + q + ");", null);
                 }
             });
         }
@@ -107,11 +162,8 @@ public class MainActivity extends Activity {
                         conn.setRequestProperty("Authorization", "Bearer " + token.trim());
                         conn.setRequestProperty("Content-Type", "application/json");
                         conn.setDoOutput(true);
-
                         byte[] body = orderJson.getBytes(StandardCharsets.UTF_8);
-                        try (OutputStream os = conn.getOutputStream()) {
-                            os.write(body);
-                        }
+                        try (OutputStream os = conn.getOutputStream()) { os.write(body); }
                         conn.getResponseCode();
                     } catch (Exception ignored) {
                     } finally {
@@ -124,10 +176,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        if (webView != null && webView.canGoBack()) webView.goBack();
+        else super.onBackPressed();
     }
 }
