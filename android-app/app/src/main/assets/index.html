@@ -1423,6 +1423,38 @@
       });
     }
 
+    // Synthesized Institutional Audio & Vibration Alert for Entries & Auto Square-Off
+    function playDeskAlert(type) {
+      try {
+        if (navigator.vibrate) {
+          navigator.vibrate(type === 'SQOFF' ? [200, 100, 200, 100, 300] : [120, 60, 120]);
+        }
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type === 'SQOFF' ? 'sawtooth' : 'sine';
+        osc.frequency.setValueAtTime(type === 'SQOFF' ? 880 : 660, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(type === 'SQOFF' ? 440 : 990, ctx.currentTime + 0.28);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.33);
+      } catch (e) {}
+    }
+
+    function launchGrowwMobileApp(symbol, side, qty, price) {
+      const clipText = `${side} ${qty} ${symbol} @ ₹${price}`;
+      try {
+        if (navigator.clipboard) navigator.clipboard.writeText(String(price)).catch(() => {});
+      } catch (e) {}
+      addAuditLog(`Copied Limit Price ₹${price} (${clipText}) & launching Groww mobile app...`, 'GROWW-APP');
+      window.location.href = 'intent://groww.in/stocks#Intent;scheme=https;package=com.nextbillion.groww;end';
+    }
+
     function openTradePosition(symbol, execMode) {
       const s = appState.allAnalyzed.find(x => x.symbol === symbol);
       if (!s) return;
@@ -1432,7 +1464,11 @@
         sl: s.sl, stopDist: s.stopDist, t1: s.t1, t2: s.t2, t3: s.t3,
         pnl: 0.0, mode: execMode, trailed: false, openedAt: new Date().toLocaleTimeString()
       };
-      addAuditLog(`OPENED ${execMode} MIS ${side}: ${s.qty} sh ${s.symbol} @ ₹${s.entry} (Auto SqOff Armed)`, 'ORDER');
+      playDeskAlert('ORDER');
+      try {
+        if (navigator.clipboard) navigator.clipboard.writeText(String(s.entry)).catch(() => {});
+      } catch (e) {}
+      addAuditLog(`OPENED ${execMode} MIS ${side}: ${s.qty} sh ${s.symbol} @ ₹${s.entry} (Limit Price Copied & Auto SqOff Armed)`, 'ORDER');
 
       if (appState.growwToken) {
         const orderPayload = JSON.stringify({
@@ -1440,13 +1476,20 @@
           exchange: 'NSE', segment: 'CASH', product: 'MIS',
           order_type: 'LIMIT', price: s.entry, transaction_type: side
         });
-        if (window.AndroidBridge && typeof window.AndroidBridge.placeGrowwOrderAsync === 'function') {
+        const targetUrl = appState.staticRelayUrl ? (appState.staticRelayUrl.replace(/\/+$/, '') + '/order') : 'https://api.groww.in/v1/order/create';
+        if (window.AndroidBridge && typeof window.AndroidBridge.placeGrowwOrderAsync === 'function' && !appState.staticRelayUrl) {
           window.AndroidBridge.placeGrowwOrderAsync(orderPayload, appState.growwToken);
         } else {
-          fetch('https://api.groww.in/v1/order/create', {
+          fetch(targetUrl, {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + appState.growwToken, 'Content-Type': 'application/json' },
             body: orderPayload
+          }).then(r => r.json()).then(res => {
+            if (res && (res.error || res.status === 'FAILURE')) {
+              addAuditLog(`5G Dynamic IP Notice (${s.symbol}): Tap '📲 Open Groww App' to place with 1 tap (₹${s.entry} copied).`, '5G-IP');
+            } else {
+              addAuditLog(`LIVE GROWW ORDER CONFIRMED (${s.symbol}): ${JSON.stringify(res)}`, 'GROWW');
+            }
           }).catch(() => {});
         }
       }
@@ -1458,6 +1501,7 @@
     function closePosition(symbol, reason) {
       const pos = appState.openPositions[symbol];
       if (!pos) return;
+      playDeskAlert('SQOFF');
       delete appState.openPositions[symbol];
       const net = +(pos.pnl - 20.0).toFixed(2);
       appState.realizedPnl = +(appState.realizedPnl + net).toFixed(2);
@@ -1485,8 +1529,9 @@
                 </div>
                 <span class="mono" style="font-size:11px; color:var(--text-secondary); display:block; margin-top:4px;">Entry: ₹${p.entry.toFixed(2)} | LTP: ₹${p.ltp.toFixed(2)} | Auto-SL: <strong style="color:var(--rose-bright);">₹${p.sl.toFixed(2)}</strong> | T2: <strong style="color:var(--emerald-bright);">₹${p.t2.toFixed(2)}</strong></span>
               </div>
-              <div style="display:flex; align-items:center; gap:10px;">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                 <span class="mono" style="font-size:16px; font-weight:900; color:${p.pnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${p.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(p.pnl).toFixed(2)}</span>
+                <button onclick="launchGrowwMobileApp('${p.symbol}', '${p.side}', ${p.qty}, ${p.entry})" class="btn-primary" style="padding:6px 10px; font-size:11px;">📲 Groww App</button>
                 <button onclick="closePosition('${p.symbol}', 'Manual 1-Tap Square-Off')" class="btn-danger">Square Off</button>
               </div>
             </div>
@@ -1519,14 +1564,14 @@
             <span class="badge badge-emerald mono">SEBI COMPLIANT</span>
           </div>
 
-          <!-- Step 1: Static IP Helper for Groww's 'Add static IP' button -->
+          <!-- Step 1: Jio/Airtel 5G Dynamic IP vs Registered Static IP Detector -->
           <div class="ltp-box" style="flex-wrap:wrap;">
             <div>
-              <span class="bento-lbl" style="color:var(--emerald-bright);">1. Your Public IPv4 Address (For Groww "Add static IP" Button)</span>
-              <span id="myPublicIp" class="mono" style="font-size:16px; font-weight:900; color:#fff; display:block; margin-top:3px;">Detecting IPv4...</span>
-              <span style="font-size:10.5px; color:var(--text-secondary);">Tap "Add static IP" on groww.in/trade-api/api-keys and paste this IPv4 address.</span>
+              <span class="bento-lbl" style="color:var(--emerald-bright);">1. Live Network IPv4 vs Groww Registered IP (152.57.97.47)</span>
+              <span id="myPublicIp" class="mono" style="font-size:15px; font-weight:900; color:#fff; display:block; margin-top:3px;">Detecting IPv4...</span>
+              <span style="font-size:10.5px; color:var(--text-secondary);">Mobile 5G (Jio 152.57.x.x) rotates IPs dynamically. Live NSE Quant Signals &amp; Auto Square-Off work on ANY IP! For direct API order routing when 5G IP changes, use Wi-Fi/Static Relay or tap <strong>📲 Groww App</strong> (auto-copies limit price).</span>
             </div>
-            <button onclick="detectAndCopyIp()" class="btn-primary mono" style="font-size:11px;">📋 Copy My IP</button>
+            <button onclick="detectAndCopyIp()" class="btn-primary mono" style="font-size:11px;">📋 Copy IP</button>
           </div>
 
           <!-- Step 2: Credentials from 'Generate API key' dropdown -->
