@@ -1514,32 +1514,89 @@
     function renderSettingsView(grid) {
       grid.innerHTML = `
         <div class="quant-card wait" style="grid-column:1/-1; gap:14px;">
-          <h3 style="font-size:16px; font-weight:900;">⚙️ HyperSpeed Engine &amp; Groww API Settings</h3>
-          <p style="font-size:12px; color:var(--text-secondary);">All 24 NSE stocks, strategy matrices, and UI components are pre-loaded locally inside the APK for 0ms instant startup.</p>
+          <div class="row-between">
+            <h3 style="font-size:16px; font-weight:900;">⚙️ Groww API Keys, TOTP &amp; Static IP Setup</h3>
+            <span class="badge badge-emerald mono">SEBI COMPLIANT</span>
+          </div>
+
+          <!-- Step 1: Static IP Helper for Groww's 'Add static IP' button -->
+          <div class="ltp-box" style="flex-wrap:wrap;">
+            <div>
+              <span class="bento-lbl" style="color:var(--emerald-bright);">1. Your Public IPv4 Address (For Groww "Add static IP" Button)</span>
+              <span id="myPublicIp" class="mono" style="font-size:16px; font-weight:900; color:#fff; display:block; margin-top:3px;">Detecting IPv4...</span>
+              <span style="font-size:10.5px; color:var(--text-secondary);">Tap "Add static IP" on groww.in/trade-api/api-keys and paste this IPv4 address.</span>
+            </div>
+            <button onclick="detectAndCopyIp()" class="btn-primary mono" style="font-size:11px;">📋 Copy My IP</button>
+          </div>
+
+          <!-- Step 2: Credentials from 'Generate API key' dropdown -->
           <div class="bento-2">
             <div>
               <label style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:5px;">Trading Capital (₹)</label>
               <input id="capInp" type="number" value="${appState.capital}" onchange="saveSettings()" class="search-inp mono" style="width:100%;" />
             </div>
             <div>
-              <label style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:5px;">Groww API Token (Live MIS Execution)</label>
-              <input id="tokInp" type="password" value="${appState.growwToken}" onchange="saveSettings()" placeholder="Paste Groww Bearer Token..." class="search-inp mono" style="width:100%; text-transform:none;" />
+              <label style="font-size:11px; font-weight:700; color:var(--emerald-bright); display:block; margin-bottom:5px;">Groww Access Token / TOTP Token (eyJ...)</label>
+              <input id="tokInp" type="password" value="${appState.growwToken}" onchange="saveSettings()" placeholder="Paste Token from Generate API key..." class="search-inp mono" style="width:100%; text-transform:none;" />
             </div>
+          </div>
+
+          <div class="bento-2">
+            <div>
+              <label style="font-size:11px; font-weight:700; color:var(--cyan-bright); display:block; margin-bottom:5px;">TOTP QR Secret (Optional Base32 for Auto Daily Login)</label>
+              <input id="totpSecInp" type="password" value="${appState.totpSecret || ''}" onchange="saveSettings()" placeholder="e.g. UG3X... from Generate TOTP token" class="search-inp mono" style="width:100%;" />
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button onclick="saveSettings()" class="btn-exec" style="width:100%; padding:10px;">💾 Save &amp; Activate Groww API</button>
+            </div>
+          </div>
+
+          <div class="verdict-box">
+            <strong style="color:var(--amber-bright);">How to fill from your Groww screen (groww.in/trade-api/api-keys):</strong><br>
+            1. Tap the green <strong>Add static IP</strong> button at top-right and paste the IPv4 shown above.<br>
+            2. Tap the green <strong>Generate API key ▾</strong> dropdown → select <strong>Generate TOTP token</strong> (or <strong>Generate API key</strong>).<br>
+            3. Name it <code style="color:#fff;">TraderPro</code>, copy the generated <strong>Token</strong> (and optional <strong>TOTP Secret</strong>), and paste them above!
           </div>
         </div>
       `;
+      fetchPublicIpv4();
+    }
+
+    function fetchPublicIpv4() {
+      fetch('https://api.ipify.org?format=json')
+        .then(r => r.json())
+        .then(d => {
+          const el = document.getElementById('myPublicIp');
+          if (el && d.ip) el.textContent = d.ip;
+        })
+        .catch(() => {
+          const el = document.getElementById('myPublicIp');
+          if (el) el.textContent = 'Run: curl -4 ifconfig.me in Termux';
+        });
+    }
+
+    function detectAndCopyIp() {
+      const el = document.getElementById('myPublicIp');
+      const ip = el ? el.textContent.trim() : '';
+      if (ip && navigator.clipboard) {
+        navigator.clipboard.writeText(ip).catch(() => {});
+      }
+      if (el) el.style.color = 'var(--emerald-bright)';
     }
 
     function saveSettings() {
       const c = parseFloat(document.getElementById('capInp')?.value || '100000');
       const t = (document.getElementById('tokInp')?.value || '').trim();
+      const sec = (document.getElementById('totpSecInp')?.value || '').trim();
       appState.capital = c > 1000 ? c : 100000;
       appState.growwToken = t;
+      appState.totpSecret = sec;
       try {
         localStorage.setItem('tp15_capital', String(appState.capital));
         localStorage.setItem('tp15_groww_token', appState.growwToken);
+        localStorage.setItem('tp15_totp_secret', appState.totpSecret);
       } catch (e) {}
-      addAuditLog('Saved Capital & Groww API Token.', 'CONFIG');
+      addAuditLog('Saved Capital, Groww API Token & TOTP Secret.', 'CONFIG');
       appState.lastRenderedSignature = '';
       recomputeAndPatchUI();
     }
