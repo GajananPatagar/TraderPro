@@ -1,4 +1,4 @@
-name: Build TraderPro Android APK & Release
+name: Build TraderPro Standalone Android APK
 
 on:
   push:
@@ -21,148 +21,36 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.4'
-
-      - name: Generate Native Android WebView App Project
+      - name: Verify Pre-Installed Android SDK & Accept Licenses (No broken setup-android@v3)
         run: |
-          mkdir -p android-app/app/src/main/java/com/traderpro/app
-          mkdir -p android-app/app/src/main/assets
+          echo "Using pre-installed ANDROID_HOME: $ANDROID_HOME"
+          SDKMGR=$(find $ANDROID_HOME/cmdline-tools -name sdkmanager | head -n 1)
+          yes | "$SDKMGR" --licenses || true
+          "$SDKMGR" "platforms;android-34" "build-tools;34.0.0"
 
-          python3 -c '
-          import traderpro_bot
-          open("android-app/app/src/main/assets/index.html", "w").write(traderpro_bot.HTML_PAGE)
-          '
-
-          cat << 'SETTINGS' > android-app/settings.gradle
-          pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
-          dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          rootProject.name = "TraderPro"
-          include(":app")
-          SETTINGS
-
-          cat << 'ROOTGRADLE' > android-app/build.gradle
-          plugins {
-              id 'com.android.application' version '8.1.2' apply false
-          }
-          ROOTGRADLE
-
-          cat << 'APPGRADLE' > android-app/app/build.gradle
-          plugins {
-              id 'com.android.application'
-          }
-          android {
-              namespace 'com.traderpro.app'
-              compileSdk 34
-              defaultConfig {
-                  applicationId "com.traderpro.app"
-                  minSdk 24
-                  targetSdk 34
-                  versionCode 10
-                  versionName "10.0-Titan"
-              }
-              buildTypes {
-                  release {
-                      minifyEnabled false
-                  }
-              }
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_17
-                  targetCompatibility JavaVersion.VERSION_17
-              }
-          }
-          APPGRADLE
-
-          cat << 'MANIFEST' > android-app/app/src/main/AndroidManifest.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-              <application
-                  android:label="TraderPro v10 Titan"
-                  android:usesCleartextTraffic="true"
-                  android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true"
-                      android:configChanges="orientation|screenSize|keyboardHidden">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          MANIFEST
-
-          cat << 'JAVA' > android-app/app/src/main/java/com/traderpro/app/MainActivity.java
-          package com.traderpro.app;
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import android.webkit.WebViewClient;
-          public class MainActivity extends Activity {
-              private WebView webView;
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  webView = new WebView(this);
-                  WebSettings s = webView.getSettings();
-                  s.setJavaScriptEnabled(true);
-                  s.setDomStorageEnabled(true);
-                  s.setAllowFileAccess(true);
-                  s.setAllowUniversalAccessFromFileURLs(true);
-                  webView.setWebViewClient(new WebViewClient());
-                  setContentView(webView);
-                  webView.loadUrl("http://127.0.0.1:8080");
-              }
-              @Override
-              public void onBackPressed() {
-                  if (webView != null && webView.canGoBack()) webView.goBack();
-                  else super.onBackPressed();
-              }
-          }
-          JAVA
-
-      - name: Compile TraderPro Android APK
+      - name: Build Standalone Serverless APK with Gradle
         working-directory: android-app
-        run: gradle assembleDebug --no-daemon
-
-      - name: Prepare Release Assets
         run: |
-          cp android-app/app/build/outputs/apk/debug/app-debug.apk TraderPro-v10-Titan.apk
+          gradle assembleDebug assembleRelease --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk ../TraderPro-v12-Autonomous.apk
 
-      - name: Upload TraderPro Android APK Artifact
+      - name: Upload TraderPro Standalone APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TraderPro-v10-Titan-APK
-          path: |
-            TraderPro-v10-Titan.apk
-            traderpro_bot.py
+          name: TraderPro-v12-Autonomous-APK
+          path: TraderPro-v12-Autonomous.apk
 
-      - name: Publish GitHub Release with APK
+      - name: Publish GitHub Release with Installable APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v10.0.${{ github.run_number }}
-          name: "TraderPro v10.0 Titan (Android APK + Termux Engine #${{ github.run_number }})"
+          tag_name: v12.0.${{ github.run_number }}
+          name: "TraderPro v12.0 Autonomous (Standalone Serverless Android APK #${{ github.run_number }})"
+          body: |
+            ### TraderPro v12.0 Autonomous — Standalone Serverless Android App
+            - **100% Standalone APK (`TraderPro-v12-Autonomous.apk`)**: Runs natively on Android without needing a Termux server!
+            - **Triple-Core Institutional Quant Engine**: Early Ignition Sniper + 4-Timeframe Trend Rider + VWAP/EMA Dip Value Sniper.
+            - **7-Layer Anti-Loss Shield & Auto Square-Off**: Works in both Manual and Auto modes.
           files: |
-            TraderPro-v10-Titan.apk
-            traderpro_bot.py
+            TraderPro-v12-Autonomous.apk
+            index.html
