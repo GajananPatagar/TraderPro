@@ -8,8 +8,8 @@ android {
         applicationId "com.traderpro.app"
         minSdk 24
         targetSdk 34
-        versionCode 12
-        versionName "12.0-Autonomous"
+        versionCode 15
+        versionName "15.0-HyperSpeed"
     }
     buildTypes {
         debug {

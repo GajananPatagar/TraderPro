@@ -1,4 +1,4 @@
-name: Build TraderPro Standalone Android APK
+name: Build TraderPro HyperSpeed Android APK
 
 on:
   push:
@@ -21,36 +21,30 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Verify Pre-Installed Android SDK & Accept Licenses (No broken setup-android@v3)
+      - name: Accept Android SDK Licenses & Ensure Build-Tools 34
         run: |
-          echo "Using pre-installed ANDROID_HOME: $ANDROID_HOME"
           SDKMGR=$(find $ANDROID_HOME/cmdline-tools -name sdkmanager | head -n 1)
           yes | "$SDKMGR" --licenses || true
           "$SDKMGR" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Build Standalone Serverless APK with Gradle
+      - name: Compile HyperSpeed Standalone APK
         working-directory: android-app
         run: |
           gradle assembleDebug assembleRelease --no-daemon
-          cp app/build/outputs/apk/debug/app-debug.apk ../TraderPro-v12-Autonomous.apk
+          cp app/build/outputs/apk/debug/app-debug.apk ../TraderPro-v15-HyperSpeed.apk
 
-      - name: Upload TraderPro Standalone APK Artifact
+      - name: Upload TraderPro HyperSpeed APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TraderPro-v12-Autonomous-APK
-          path: TraderPro-v12-Autonomous.apk
+          name: TraderPro-v15-HyperSpeed-APK
+          path: TraderPro-v15-HyperSpeed.apk
 
-      - name: Publish GitHub Release with Installable APK
+      - name: Publish GitHub Release with APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v12.0.${{ github.run_number }}
-          name: "TraderPro v12.0 Autonomous (Standalone Serverless Android APK #${{ github.run_number }})"
-          body: |
-            ### TraderPro v12.0 Autonomous — Standalone Serverless Android App
-            - **100% Standalone APK (`TraderPro-v12-Autonomous.apk`)**: Runs natively on Android without needing a Termux server!
-            - **Triple-Core Institutional Quant Engine**: Early Ignition Sniper + 4-Timeframe Trend Rider + VWAP/EMA Dip Value Sniper.
-            - **7-Layer Anti-Loss Shield & Auto Square-Off**: Works in both Manual and Auto modes.
+          tag_name: v15.0.${{ github.run_number }}
+          name: "TraderPro v15.0 HyperSpeed (0ms Flash-Open Standalone APK #${{ github.run_number }})"
           files: |
-            TraderPro-v12-Autonomous.apk
+            TraderPro-v15-HyperSpeed.apk
             index.html
