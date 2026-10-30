@@ -113,7 +113,7 @@ public class MainActivity extends Activity {
                             while ((line = br.readLine()) != null) sb.append(line).append("\n");
                         }
                         String html = sb.toString();
-                        if (html.length() > 10000 && html.contains("TraderPro")) {
+                        if (html.length() > 10000 && (html.contains("TraderPro") || html.contains("Trader Pro"))) {
                             final File otaFile = new File(getFilesDir(), "ota_index.html");
                             try (FileOutputStream fos = new FileOutputStream(otaFile)) {
                                 fos.write(html.getBytes(StandardCharsets.UTF_8));

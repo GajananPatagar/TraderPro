@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>TraderPro v20.0 Sovereign — 1-Crore AI Quant, News NLP & OTA Terminal</title>
+  <!-- TraderPro OTA Signature --><title>Trader Pro — Overnight Global, Dow Jones & 1-Crore AI Quant</title>
   <style>
     :root {
       --bg-base: #03060d;
@@ -248,7 +248,12 @@
       background: var(--bg-glass); backdrop-filter: blur(16px); border-top: 1px solid var(--border-subtle);
       padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
     }
-    .bottom-nav-inner { max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .bottom-nav-inner { max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; }
+    .global-ribbon { display: flex; gap: 6px; overflow-x: auto; padding: 6px 8px; background: rgba(15, 23, 42, 0.92); border: 1px solid var(--border-subtle); border-radius: 10px; scrollbar-width: none; align-items: center; }
+    .global-ribbon::-webkit-scrollbar { display: none; }
+    .glob-chip { flex-shrink: 0; padding: 4px 8px; border-radius: 7px; background: rgba(2, 6, 23, 0.85); border: 1px solid rgba(148, 163, 184, 0.16); font-size: 10px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .glob-chip.bull { border-color: rgba(16, 185, 129, 0.4); }
+    .glob-chip.bear { border-color: rgba(244, 63, 94, 0.4); }
     .nav-item { padding: 7px 2px; border-radius: 10px; font-size: 10.5px; font-weight: 700; color: var(--text-secondary); text-align: center; }
     .nav-item.active { background: var(--emerald); color: #020617; font-weight: 900; }
 
@@ -269,7 +274,7 @@
       <div style="width:56px; height:56px; border-radius:16px; margin:0 auto 10px; background:linear-gradient(135deg,#10b981,#06b6d4,#6366f1); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 25px rgba(16,185,129,0.35);">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#020617" stroke-width="2.5"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
       </div>
-      <h2 style="font-size:18px; font-weight:900; color:#fff;">TraderPro v20 Sovereign</h2>
+      <h2 style="font-size:19px; font-weight:900; color:#fff;">Trader Pro</h2>
       <p style="font-size:11.5px; color:var(--text-secondary); margin-top:3px;">1-Crore AI Quant • Kalman + HMM + News NLP Vault</p>
       <p id="vaultMsg" class="mono" style="font-size:11px; color:var(--emerald-bright); margin-top:8px;">Enter 4-Digit Master PIN (Default: 7777)</p>
 
@@ -319,17 +324,30 @@
           </div>
           <div>
             <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-              <span style="font-size:14.5px; font-weight:900; color:#fff;">TraderPro v20</span>
+              <span style="font-size:15.5px; font-weight:900; color:#fff; letter-spacing:0.3px;">Trader Pro</span>
               <span id="envTagBadge" class="badge badge-indigo mono">DEMO PRACTICE</span>
               <button onclick="triggerOtaUpdate()" class="badge badge-emerald mono" style="cursor:pointer;">☁️ OTA UPDATE</button>
             </div>
-            <p id="statusText" style="font-size:10.5px; color:var(--text-secondary);">Kalman + Markov HMM + 32 Candle Patterns + Live News NLP</p>
+            <p id="statusText" style="font-size:10.5px; color:var(--text-secondary);">Dow Jones &amp; Overnight Cues + Kalman + 32 Candles + News AI</p>
           </div>
         </div>
         <div style="text-align:right;" class="mono">
           <span id="clockText" style="font-size:11.5px; font-weight:800; color:var(--emerald-bright); display:block;">--:--:--</span>
           <button onclick="lockVaultNow()" style="font-size:10px; color:var(--amber-bright); font-weight:800;">🔒 Lock Vault</button>
         </div>
+      </div>
+
+      <!-- LIVE OVERNIGHT GLOBAL & DOW JONES RIBBON -->
+      <div id="globalTickerRibbon" class="global-ribbon mono" onclick="setTab('OVERNIGHT')">
+        <span class="badge badge-cyan" style="flex-shrink:0;">🌐 OVERNIGHT</span>
+        <div class="glob-chip bull"><b>DOW JONES</b> <span id="rib-dji" style="color:var(--emerald-bright);">42,384 (+0.68%)</span></div>
+        <div class="glob-chip bull"><b>NASDAQ</b> <span id="rib-ixic" style="color:var(--emerald-bright);">18,542 (+0.94%)</span></div>
+        <div class="glob-chip bull"><b>S&amp;P 500</b> <span id="rib-spx" style="color:var(--emerald-bright);">5,838 (+0.61%)</span></div>
+        <div class="glob-chip bull"><b>GIFT NIFTY</b> <span id="rib-gift" style="color:var(--emerald-bright);">24,495 (+88 pts)</span></div>
+        <div class="glob-chip bull"><b>NIKKEI 225</b> <span id="rib-n225" style="color:var(--emerald-bright);">38,920 (+0.76%)</span></div>
+        <div class="glob-chip bull"><b>BRENT OIL</b> <span id="rib-oil" style="color:var(--emerald-bright);">$71.40 (-1.35%)</span></div>
+        <div class="glob-chip"><b>USD/INR</b> <span id="rib-usdinr" style="color:var(--amber-bright);">₹84.06 (-0.04%)</span></div>
+        <div class="glob-chip bull"><b>INDIA VIX</b> <span id="rib-vix" style="color:var(--emerald-bright);">13.42 (-4.2%)</span></div>
       </div>
 
       <div class="row-between" style="flex-wrap:wrap;">
@@ -397,8 +415,9 @@
   <nav class="bottom-nav">
     <div class="bottom-nav-inner">
       <button onclick="setTab('ACTIVE')" id="tab-ACTIVE" class="nav-item active">🔥 Trades</button>
+      <button onclick="setTab('OVERNIGHT')" id="tab-OVERNIGHT" class="nav-item">🌐 Global</button>
       <button onclick="setTab('POSITIONS')" id="tab-POSITIONS" class="nav-item">💼 Book</button>
-      <button onclick="setTab('NEWS')" id="tab-NEWS" class="nav-item">📰 News AI</button>
+      <button onclick="setTab('NEWS')" id="tab-NEWS" class="nav-item">📰 News</button>
       <button onclick="setTab('RADAR')" id="tab-RADAR" class="nav-item">📡 Radar</button>
       <button onclick="setTab('SETTINGS')" id="tab-SETTINGS" class="nav-item">⚙️ Setup</button>
     </div>
@@ -419,6 +438,83 @@
   </div>
 
   <script>
+    const OVERNIGHT_GLOBAL_DESK = {
+      regimeBias: 'BULLISH GAP-UP (+78% Global Alignment)',
+      giftNiftyGapPts: +88.5,
+      giftNiftyPrice: 24495.50,
+      fiiCashCr: -640,
+      diiCashCr: +2480,
+      fiiIndexFutCr: +1420,
+      niftyPcr: 1.18,
+      macroMode: 'BULL',
+      indices: [
+        { id: 'DJI', name: 'Dow Jones Industrial (US 30)', region: '🇺🇸 Wall Street', price: 42384.20, chgPct: +0.68, chgPts: '+286.4', range: '42,080 - 42,440', bias: 'BULL', impactSector: 'Private Banks, CapGoods & Industrials (HDFCBANK, ICICIBANK, LT, SBIN)', note: 'Dow Jones closed near session highs on strong US bank & industrial earnings; boosts NSE BankNifty & Heavyweights at 9:15 AM.' },
+        { id: 'IXIC', name: 'NASDAQ Composite / US Tech 100', region: '🇺🇸 Wall Street', price: 18542.80, chgPct: +0.94, chgPts: '+172.6', range: '18,360 - 18,580', bias: 'BULL', impactSector: 'NSE IT Services (INFY, TCS, HCLTECH, WIPRO)', note: 'Strong AI & Cloud rally on NASDAQ triggers direct positive gap for Infosys & TCS.' },
+        { id: 'SPX', name: 'S&P 500 Broad Index', region: '🇺🇸 Wall Street', price: 5838.60, chgPct: +0.61, chgPts: '+35.4', range: '5,802 - 5,846', bias: 'BULL', impactSector: 'Broad Nifty 50 Institutional Risk-On Flow', note: 'S&P 500 holding above 20-DMA keeps global institutional risk appetite constructive.' },
+        { id: 'GIFT', name: 'GIFT Nifty (SGX / NSE IFSC)', region: '🇮🇳 Pre-Market', price: 24495.50, chgPct: +0.36, chgPts: '+88.5', range: '24,410 - 24,525', bias: 'BULL', impactSector: 'Nifty 50 Opening Bell Gap (+80 to +95 pts)', note: 'GIFT Nifty trading at +88.5 pt premium over previous NSE close; signals Gap-Up opening.' },
+        { id: 'N225', name: 'Nikkei 225 (Tokyo)', region: '🇯🇵 Asia Morning', price: 38920.00, chgPct: +0.76, chgPts: '+294.0', range: '38,610 - 38,980', bias: 'BULL', impactSector: 'Autos & Exporters (MARUTI, M&M)', note: 'Asian markets following Wall Street higher; supports morning buyer follow-through.' },
+        { id: 'HSI', name: 'Hang Seng (Hong Kong)', region: '🇭🇰 Asia Morning', price: 20640.00, chgPct: -0.28, chgPts: '-58.0', range: '20,510 - 20,790', bias: 'NEUTRAL', impactSector: 'Metals & China-Linked Commodities (TATASTEEL)', note: 'China metal stimulus consolidation keeps steel stocks mildly range-bound.' },
+        { id: 'BRENT', name: 'Brent Crude Oil Futures', region: '🛢️ Commodities', price: 71.40, chgPct: -1.35, chgPts: '-$0.98', range: '$70.90 - $72.60', bias: 'BULL', impactSector: 'Bullish India Macro, OMCs, Paints, Aviation & RELIANCE', note: 'Crude oil cooling below $72 is a strong macro tailwind for Indian inflation, Rupee & Nifty.' },
+        { id: 'USDINR', name: 'USD / INR Spot & NDF', region: '💱 Forex Desk', price: 84.06, chgPct: -0.04, chgPts: '-0.03', range: '84.03 - 84.09', bias: 'BULL', impactSector: 'FII Inflows, Banking & IT', note: 'Stable Rupee with RBI support prevents imported volatility.' },
+        { id: 'US10Y', name: 'US 10-Year Treasury Yield', region: '🇺🇸 Rates Desk', price: 4.21, chgPct: -0.95, chgPts: '-4 bps', range: '4.19% - 4.26%', bias: 'BULL', impactSector: 'Emerging Market FII Flows & IT Valuations', note: 'Pullback in US bond yields eases FII selling pressure on Indian equities.' },
+        { id: 'VIX', name: 'India VIX (Fear Index)', region: '🇮🇳 Volatility', price: 13.42, chgPct: -4.20, chgPts: '-0.59', range: '13.10 - 14.05', bias: 'BULL', impactSector: 'Intraday Trend Stability & Option Buyers', note: 'India VIX below 14 favors clean intraday directional breakouts without violent whipsaws.' }
+      ],
+      adrs: [
+        { sym: 'INFY ADR (NYSE)', nseSym: 'INFY', chgPct: +1.28, closeUsd: '$21.84', impliedGap: '+1.1% Gap Up', bias: 'BULL' },
+        { sym: 'HDFC BANK ADR (NYSE)', nseSym: 'HDFCBANK', chgPct: +0.92, closeUsd: '$63.40', impliedGap: '+0.8% Gap Up', bias: 'BULL' },
+        { sym: 'ICICI BANK ADR (NYSE)', nseSym: 'ICICIBANK', chgPct: +1.15, closeUsd: '$30.65', impliedGap: '+1.0% Gap Up', bias: 'BULL' },
+        { sym: 'RELIANCE GDR (LSE)', nseSym: 'RELIANCE', chgPct: +0.84, closeUsd: '$61.90', impliedGap: '+0.7% Gap Up', bias: 'BULL' },
+        { sym: 'DR REDDY ADR (NYSE)', nseSym: 'SUNPHARMA', chgPct: +0.64, closeUsd: '$79.20', impliedGap: '+0.6% Gap Up', bias: 'BULL' },
+        { sym: 'TATA MOTORS / JLR CUE', nseSym: 'TATAMOTORS', chgPct: -0.85, closeUsd: 'EU Auto -0.9%', impliedGap: '-0.7% Soft Open', bias: 'BEAR' }
+      ]
+    };
+
+    function getOvernightStockFactor(symbol, sector) {
+      const dji = OVERNIGHT_GLOBAL_DESK.indices[0];
+      const ixic = OVERNIGHT_GLOBAL_DESK.indices[1];
+      const gift = OVERNIGHT_GLOBAL_DESK.indices[3];
+      const oil = OVERNIGHT_GLOBAL_DESK.indices[6];
+      const adr = OVERNIGHT_GLOBAL_DESK.adrs.find(a => a.nseSym === symbol);
+
+      let score = 0;
+      let cues = [];
+
+      if (dji.chgPct >= 0.25) { score += 35; cues.push(`Dow +${dji.chgPct}%`); }
+      else if (dji.chgPct <= -0.25) { score -= 35; cues.push(`Dow ${dji.chgPct}%`); }
+      else { cues.push(`Dow ${dji.chgPct}%`); }
+
+      if (sector.includes('IT')) {
+        if (ixic.chgPct >= 0.3) { score += 45; cues.push(`NASDAQ +${ixic.chgPct}%`); }
+        else if (ixic.chgPct <= -0.3) { score -= 45; cues.push(`NASDAQ ${ixic.chgPct}%`); }
+      } else if (sector.includes('Bank') || sector.includes('Financial')) {
+        if (dji.chgPct >= 0.2) { score += 35; cues.push(`US Banks/Dow Bullish`); }
+        else if (dji.chgPct <= -0.2) { score -= 35; cues.push(`US Banks Weak`); }
+      } else if (sector.includes('Energy') || sector.includes('Consumer') || sector.includes('Auto')) {
+        if (oil.chgPct <= -0.5) { score += 25; cues.push(`Brent Oil ${oil.chgPct}%`); }
+        else if (oil.chgPct >= 1.2) { score -= 25; cues.push(`Brent Oil +${oil.chgPct}%`); }
+      }
+
+      if (gift.chgPct >= 0.15) { score += 20; cues.push(`GIFT +${gift.chgPts}pts`); }
+      else if (gift.chgPct <= -0.15) { score -= 20; cues.push(`GIFT ${gift.chgPts}pts`); }
+
+      if (adr) {
+        if (adr.chgPct >= 0.4) { score = Math.max(score + 25, 75); cues.unshift(`ADR +${adr.chgPct}%`); }
+        else if (adr.chgPct <= -0.4) { score = Math.min(score - 25, -65); cues.unshift(`ADR ${adr.chgPct}%`); }
+      }
+
+      if (symbol === 'TATAMOTORS' || symbol === 'TATASTEEL' || symbol === 'INDUSINDBK') {
+        score = Math.min(score, -45);
+      }
+
+      const clamped = Math.max(-95, Math.min(95, score));
+      const gapCall = clamped >= 35 ? 'GAP UP + ORB BUY' : (clamped <= -35 ? 'GAP DOWN + ORB SHORT' : 'FLAT OPEN • WAIT VWAP');
+      return {
+        score: clamped,
+        summary: cues.slice(0, 3).join(' | '),
+        gapCall
+      };
+    }
+
     const PRELOADED_UNIVERSE = [
       { symbol: 'RELIANCE', name: 'Reliance Industries', sector: 'Energy / Oil & Gas', anchor: 1296.40, seedBias: 1, newsHeadline: 'Reliance New Energy & Retail expansion boosts institutional FII target price', newsScore: 84 },
       { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd', sector: 'Private Banking', anchor: 1742.60, seedBias: 1, newsHeadline: 'HDFC Bank credit deposit ratio improves; strong institutional call writing support', newsScore: 81 },
@@ -722,6 +818,7 @@
       const candlePat = detectCandlestickPattern(dayOpen, dayHigh, dayLow, ltp, prevClose, ema9, ema21, rsi);
       const newsScore = itemMeta.newsScore || 65;
       const newsHeadline = itemMeta.newsHeadline || `${symbol} institutional volume active in ${sector}`;
+      const overnightCue = getOvernightStockFactor(symbol, sector);
 
       const vwapDistAtr = +((ltp - vwap) / Math.max(0.05, atr)).toFixed(2);
       const diSpread = +Math.abs(plusDi - minusDi).toFixed(1);
@@ -739,7 +836,7 @@
         { name: 'D4 • Multi-Timeframe RSI Matrix & Anti-Spike Gate', val: `1m:${rsi1m} | 5m:${rsi} | 15m:${rsi15m} | 1H:${rsi1h}`, bull: rsi >= 51 && rsi <= 72 && rsi15m >= 50, bear: rsi <= 49 && rsi >= 28 && rsi15m <= 50, w: 9 },
         { name: 'D5 • 32-Candlestick Morphology Engine', val: `${candlePat.name} (Day Pos: ${Math.round(dayPos * 100)}%)`, bull: candlePat.bias >= 0 && dayPos >= 0.5, bear: candlePat.bias <= 0 && dayPos <= 0.5, w: 9 },
         { name: 'D6 • Live News NLP Catalyst & Sector Sentiment', val: `News Score: ${newsScore > 0 ? '+' : ''}${newsScore}% (${newsHeadline.slice(0, 38)}...)`, bull: newsScore >= 0, bear: newsScore <= 0, w: 9 },
-        { name: 'D7 • VPIN Order Flow Imbalance & MACD Velocity', val: `OFI Delta: ${ofiDeltaPct > 0 ? '+' : ''}${ofiDeltaPct}% | MACD:${macdHist}`, bull: ofiDeltaPct >= 0 || macdHist >= 0, bear: ofiDeltaPct <= 0 || macdHist <= 0, w: 8 },
+        { name: 'D7 • Overnight Dow Jones, NASDAQ, ADR & GIFT Nifty', val: `${overnightCue.summary} → ${overnightCue.gapCall} | OFI:${ofiDeltaPct}%`, bull: overnightCue.score >= 0 && (ofiDeltaPct >= -15 || macdHist >= 0), bear: overnightCue.score <= 0 && (ofiDeltaPct <= 15 || macdHist <= 0), w: 8 },
         { name: 'D8 • Wilder ADX & Directional Dominance (+DI/-DI)', val: `ADX:${adx} (+DI:${plusDi} vs -DI:${minusDi})`, bull: plusDi > minusDi && (adx >= 17.5 || diSpread >= 5.0), bear: minusDi > plusDi && (adx >= 17.5 || diSpread >= 5.0), w: 8 },
         { name: 'D9 • Markov HMM Regime & Choppiness Shield', val: `${hmmState} (CHOP ${chopIdx})`, bull: chopIdx < 58.5, bear: chopIdx < 58.5, w: 7 },
         { name: 'D10 • Parabolic SAR Trailing Stop Alignment', val: `PSAR ₹${psar} | ATR ₹${atr}`, bull: ltp >= psar, bear: ltp <= psar, w: 6 },
@@ -885,7 +982,7 @@
       return {
         symbol, sector, timeframe: tf, recTimeframe: recTf,
         setupType, setupLabel, candlePattern: candlePat.name,
-        newsHeadline, newsScore, kalmanPrice, hmmState, ofiDeltaPct,
+        newsHeadline, newsScore, overnightCue, kalmanPrice, hmmState, ofiDeltaPct,
         ltp, prevClose, changePct, vwap, ema9, ema21, ema50, ema200,
         rsi, rsi1m, rsi15m, rsi1h, atr, adx, plusDi, minusDi, chopIdx, pivot,
         direction, rawDirection: rawDir, confluenceScore: score, winProb, passedDomains,
@@ -956,6 +1053,11 @@
       if (appState.tab === 'POSITIONS') {
         renderPositionsView(grid, openList);
         appState.lastRenderedSignature = 'POSITIONS';
+        return;
+      }
+      if (appState.tab === 'OVERNIGHT') {
+        renderOvernightView(grid, analyzed);
+        appState.lastRenderedSignature = 'OVERNIGHT';
         return;
       }
       if (appState.tab === 'NEWS') {
@@ -1102,6 +1204,10 @@
                 <div style="grid-column:1/-1; color:#e2e8f0; font-family:sans-serif; font-size:11px;">
                   <strong style="color:var(--amber-bright);">📰 Catalyst:</strong> ${s.newsHeadline}
                 </div>
+                <div style="grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; border-top:1px dashed rgba(148,163,184,0.16); padding-top:4px; font-size:10px;">
+                  <span style="color:var(--cyan-bright);">🌐 <b>${s.overnightCue.summary}</b></span>
+                  <span class="badge ${s.overnightCue.score >= 0 ? 'badge-emerald' : 'badge-rose'} mono">${s.overnightCue.gapCall}</span>
+                </div>
                 <div><span style="font-size:9px; color:var(--text-muted); display:block;">MARKOV REGIME</span><strong style="color:var(--cyan-bright);">${s.hmmState}</strong></div>
                 <div><span style="font-size:9px; color:var(--text-muted); display:block;">OFI DELTA • ADX</span><strong style="color:#fff;">${s.ofiDeltaPct > 0 ? '+' : ''}${s.ofiDeltaPct}% • ADX ${s.adx}</strong></div>
               </div>
@@ -1116,6 +1222,118 @@
           </div>
         `;
       }).join('');
+    }
+
+    function setOvernightSimRegime(mode) {
+      OVERNIGHT_GLOBAL_DESK.macroMode = mode;
+      if (mode === 'BULL') {
+        OVERNIGHT_GLOBAL_DESK.regimeBias = 'BULLISH GAP-UP (+78% Global Alignment)';
+        OVERNIGHT_GLOBAL_DESK.giftNiftyGapPts = +88.5;
+        OVERNIGHT_GLOBAL_DESK.indices[0].chgPct = +0.68; OVERNIGHT_GLOBAL_DESK.indices[0].chgPts = '+286.4'; OVERNIGHT_GLOBAL_DESK.indices[0].bias = 'BULL';
+        OVERNIGHT_GLOBAL_DESK.indices[1].chgPct = +0.94; OVERNIGHT_GLOBAL_DESK.indices[1].chgPts = '+172.6'; OVERNIGHT_GLOBAL_DESK.indices[1].bias = 'BULL';
+        OVERNIGHT_GLOBAL_DESK.indices[2].chgPct = +0.61; OVERNIGHT_GLOBAL_DESK.indices[2].chgPts = '+35.4'; OVERNIGHT_GLOBAL_DESK.indices[2].bias = 'BULL';
+        OVERNIGHT_GLOBAL_DESK.indices[3].chgPct = +0.36; OVERNIGHT_GLOBAL_DESK.indices[3].chgPts = '+88.5'; OVERNIGHT_GLOBAL_DESK.indices[3].bias = 'BULL';
+        document.getElementById('rib-dji').textContent = '42,384 (+0.68%)';
+        document.getElementById('rib-ixic').textContent = '18,542 (+0.94%)';
+        document.getElementById('rib-gift').textContent = '24,495 (+88 pts)';
+      } else if (mode === 'BEAR') {
+        OVERNIGHT_GLOBAL_DESK.regimeBias = 'BEARISH GAP-DOWN (-74% Global Risk-Off)';
+        OVERNIGHT_GLOBAL_DESK.giftNiftyGapPts = -112.0;
+        OVERNIGHT_GLOBAL_DESK.indices[0].chgPct = -0.82; OVERNIGHT_GLOBAL_DESK.indices[0].chgPts = '-348.0'; OVERNIGHT_GLOBAL_DESK.indices[0].bias = 'BEAR';
+        OVERNIGHT_GLOBAL_DESK.indices[1].chgPct = -1.18; OVERNIGHT_GLOBAL_DESK.indices[1].chgPts = '-218.5'; OVERNIGHT_GLOBAL_DESK.indices[1].bias = 'BEAR';
+        OVERNIGHT_GLOBAL_DESK.indices[2].chgPct = -0.79; OVERNIGHT_GLOBAL_DESK.indices[2].chgPts = '-46.2'; OVERNIGHT_GLOBAL_DESK.indices[2].bias = 'BEAR';
+        OVERNIGHT_GLOBAL_DESK.indices[3].chgPct = -0.46; OVERNIGHT_GLOBAL_DESK.indices[3].chgPts = '-112.0'; OVERNIGHT_GLOBAL_DESK.indices[3].bias = 'BEAR';
+        document.getElementById('rib-dji').textContent = '41,750 (-0.82%)';
+        document.getElementById('rib-ixic').textContent = '18,150 (-1.18%)';
+        document.getElementById('rib-gift').textContent = '24,295 (-112 pts)';
+      }
+      playChime('LOCK');
+      showToast('🌐 Overnight Global & Dow Jones Regime Updated: ' + mode);
+      recomputeAndPatchUI();
+    }
+
+    function renderOvernightView(grid, analyzed) {
+      const d = OVERNIGHT_GLOBAL_DESK;
+      const isBull = d.giftNiftyGapPts >= 0;
+
+      const idxCards = d.indices.map(ix => {
+        const up = ix.chgPct >= 0;
+        const badgeCls = ix.bias === 'BULL' ? 'badge-emerald' : (ix.bias === 'BEAR' ? 'badge-rose' : 'badge-amber');
+        return `
+          <div class="quant-card ${ix.bias === 'BULL' ? 'buy' : (ix.bias === 'BEAR' ? 'sell' : 'wait')}" style="padding:12px;">
+            <div class="row-between">
+              <div>
+                <span style="font-size:10px; color:var(--text-muted); font-weight:800;">${ix.region}</span>
+                <h4 style="font-size:13.5px; font-weight:900; color:#fff;">${ix.name}</h4>
+              </div>
+              <span class="badge ${badgeCls} mono">${up ? '▲' : '▼'} ${ix.chgPct > 0 ? '+' : ''}${ix.chgPct}% (${ix.chgPts})</span>
+            </div>
+            <div class="row-between mono" style="font-size:11px; background:rgba(2,6,23,0.7); padding:6px 8px; border-radius:8px;">
+              <span>Last: <b style="color:#fff;">${ix.price.toLocaleString()}</b></span>
+              <span style="color:var(--text-secondary);">Range: ${ix.range}</span>
+            </div>
+            <div style="font-size:10.5px; color:var(--cyan-bright);">🎯 <b>NSE Sector Impact:</b> ${ix.impactSector}</div>
+            <div style="font-size:10.5px; color:var(--text-secondary); line-height:1.35;">💡 ${ix.note}</div>
+          </div>`;
+      }).join('');
+
+      const adrRows = d.adrs.map(a => `
+        <div class="domain-row ${a.chgPct >= 0 ? 'domain-pass' : 'domain-wait'}">
+          <div>
+            <b style="color:#fff; font-size:12px;">${a.sym}</b>
+            <div style="font-size:10px; color:var(--text-secondary);">Overnight Close: ${a.closeUsd} → NSE <b>${a.nseSym}</b></div>
+          </div>
+          <span class="badge ${a.chgPct >= 0 ? 'badge-emerald' : 'badge-rose'} mono">${a.chgPct > 0 ? '+' : ''}${a.chgPct}% (${a.impliedGap})</span>
+        </div>`).join('');
+
+      const stockPlaybookRows = analyzed.slice(0, 14).map(s => `
+        <div class="domain-row ${s.overnightCue.score >= 0 ? 'domain-pass' : 'domain-wait'}" onclick="setTab('ACTIVE')" style="cursor:pointer;">
+          <div>
+            <b style="color:#fff; font-size:12.5px;">${s.symbol}</b> <span style="font-size:10px; color:var(--text-secondary);">(${s.sector})</span>
+            <div style="font-size:10px; color:var(--cyan-bright);">${s.overnightCue.summary}</div>
+          </div>
+          <span class="badge ${s.overnightCue.score >= 0 ? 'badge-emerald' : 'badge-rose'} mono">${s.overnightCue.gapCall} | ₹${s.entry.toFixed(2)}</span>
+        </div>`).join('');
+
+      grid.innerHTML = `
+        <div class="quant-card ${isBull ? 'buy' : 'sell'}" style="grid-column:1/-1;">
+          <div class="row-between" style="flex-wrap:wrap;">
+            <div>
+              <span class="badge badge-cyan mono">🌐 OVERNIGHT GLOBAL &amp; DOW JONES INTELLIGENCE DESK</span>
+              <h3 style="font-size:16px; font-weight:900; color:#fff; margin-top:4px;">${d.regimeBias}</h3>
+              <p style="font-size:11px; color:var(--text-secondary);">Pre-Market Synthesis: Wall Street (Dow Jones, NASDAQ, S&amp;P 500) + GIFT Nifty + US ADRs + Brent Crude + FII/DII Flows</p>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button onclick="setOvernightSimRegime('BULL')" class="ctrl-btn" style="border-color:var(--emerald); color:var(--emerald-bright);">🟢 Bullish Global Cues</button>
+              <button onclick="setOvernightSimRegime('BEAR')" class="ctrl-btn" style="border-color:var(--rose); color:var(--rose-bright);">🔴 Bearish Global Cues</button>
+            </div>
+          </div>
+
+          <div class="easy-guide">
+            <span class="easy-guide-title">🎯 9:15 AM NSE Opening Bell Action Plan (Dow Jones + GIFT Nifty)</span>
+            1. <b>Opening Gap Projection:</b> GIFT Nifty is at <b>${d.giftNiftyPrice} (${d.giftNiftyGapPts > 0 ? '+' : ''}${d.giftNiftyGapPts} pts)</b> following Dow Jones (<b>${d.indices[0].chgPct > 0 ? '+' : ''}${d.indices[0].chgPct}%</b>) and NASDAQ (<b>${d.indices[1].chgPct > 0 ? '+' : ''}${d.indices[1].chgPct}%</b>).<br>
+            2. <b>First 15-Minute Rule (9:15–9:30 AM):</b> Do not chase emotional market orders at 9:15:05 AM. Wait for price to test the <b>Kalman Filter / VWAP Entry Level</b> on each stock card, then execute with your locked SL.<br>
+            3. <b>Institutional Flow Support:</b> DII Net Cash <b>+₹${d.diiCashCr} Cr</b> + FII Index Futures <b>+₹${d.fiiIndexFutCr} Cr</b> + Nifty PCR <b>${d.niftyPcr}</b> provide strong dip-buying support on pullbacks.
+          </div>
+
+          <div class="bento-2 mono">
+            <div class="lvl-box"><span style="font-size:9px; color:var(--text-secondary);">FII / DII NET CASH</span><strong style="font-size:13px; color:var(--emerald-bright); display:block; margin-top:2px;">FII ₹${d.fiiCashCr}Cr | DII +₹${d.diiCashCr}Cr</strong></div>
+            <div class="lvl-box"><span style="font-size:9px; color:var(--text-secondary);">FII FUTURES &amp; NIFTY PCR</span><strong style="font-size:13px; color:var(--cyan-bright); display:block; margin-top:2px;">Fut +₹${d.fiiIndexFutCr}Cr | PCR ${d.niftyPcr}</strong></div>
+          </div>
+        </div>
+
+        ${idxCards}
+
+        <div class="quant-card wait" style="grid-column:1/-1;">
+          <h4 style="font-size:14px; font-weight:900; color:#fff;">🇺🇸 Overnight US ADR &amp; London GDR Implied NSE Gaps</h4>
+          <div style="display:flex; flex-direction:column; gap:6px;">${adrRows}</div>
+        </div>
+
+        <div class="quant-card wait" style="grid-column:1/-1;">
+          <h4 style="font-size:14px; font-weight:900; color:#fff;">⚡ NSE Stocks — Overnight Global &amp; Dow Jones Opening Playbook</h4>
+          <p style="font-size:11px; color:var(--text-secondary);">Tap any stock row to jump directly to its live sniper card:</p>
+          <div style="display:flex; flex-direction:column; gap:6px;">${stockPlaybookRows}</div>
+        </div>`;
     }
 
     function renderNewsView(grid, analyzed) {
@@ -1433,7 +1651,7 @@
 
     function setTab(t) {
       appState.tab = t;
-      ['ACTIVE', 'POSITIONS', 'NEWS', 'RADAR', 'SETTINGS'].forEach(k => {
+      ['ACTIVE', 'OVERNIGHT', 'POSITIONS', 'NEWS', 'RADAR', 'SETTINGS'].forEach(k => {
         const el = document.getElementById('tab-' + k);
         if (el) el.className = (k === t) ? 'nav-item active' : 'nav-item';
       });
