@@ -23,8 +23,8 @@ jobs:
 
       - name: Auto-Increment VersionCode & Generate 85 MB Pre-Loaded Quant Tensor Pack
         run: |
-          V_CODE=$((2000 + ${{ github.run_number }}))
-          sed -i "s/versionCode 2000/versionCode $V_CODE/g" android-app/app/build.gradle
+          V_CODE=$((10000 + ${{ github.run_number }}))
+          sed -i "s/versionCode 10000/versionCode $V_CODE/g" android-app/app/build.gradle
           python3 -c '
           import os
           path = "android-app/app/src/main/assets/sovereign_quant_tensor_85mb.bin"

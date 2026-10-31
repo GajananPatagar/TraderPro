@@ -8,8 +8,8 @@ android {
         applicationId "com.traderpro.app"
         minSdk 24
         targetSdk 34
-        versionCode 2000
-        versionName "20.0-Sovereign"
+        versionCode 10000
+        versionName "1000.0-Quantum-Neural"
     }
     signingConfigs {
         persistentKey {
