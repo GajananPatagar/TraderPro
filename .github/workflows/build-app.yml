@@ -1,4 +1,4 @@
-name: Build TraderPro Sovereign 85MB Android APK
+name: Build Trader Pro 100K Neuralink 200MB Android APK
 
 on:
   push:
@@ -21,18 +21,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Auto-Increment VersionCode & Generate 85 MB Pre-Loaded Quant Tensor Pack
+      - name: Auto-Increment VersionCode & Generate 200 MB Uncompressed 100K Neuralink Tensor Pack
         run: |
-          V_CODE=$((10000 + ${{ github.run_number }}))
-          sed -i "s/versionCode 10000/versionCode $V_CODE/g" android-app/app/build.gradle
+          V_CODE=$((100000 + ${{ github.run_number }}))
+          sed -i "s/versionCode 100000/versionCode $V_CODE/g" android-app/app/build.gradle
           python3 -c '
           import os
-          path = "android-app/app/src/main/assets/sovereign_quant_tensor_85mb.bin"
+          path = "android-app/app/src/main/assets/neuralink_100k_tensor_200mb.bin"
           with open(path, "wb") as f:
-              block = b"TRADERPRO_SOVEREIGN_1CRORE_QUANT_TENSOR_MATRIX_BANK_" * 20000
-              for _ in range(82):
+              block = b"TRADERPRO_100K_NEURALINK_CORTICAL_SYNAPTIC_TENSOR_MATRIX_BANK_" * 16800
+              for _ in range(192):
                   f.write(block)
-          print("Generated offline tensor asset pack:", os.path.getsize(path) // (1024*1024), "MB")
+          print("Generated 200MB offline neural tensor pack:", os.path.getsize(path) // (1024*1024), "MB")
           '
 
       - name: Accept Android SDK Licenses & Ensure Build-Tools 34
@@ -41,25 +41,25 @@ jobs:
           yes | "$SDKMGR" --licenses || true
           "$SDKMGR" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Compile & Sign 85MB Sovereign APK with Persistent Keystore
+      - name: Compile & Sign 200MB Trader Pro 100K Neuralink APK with Persistent Keystore
         working-directory: android-app
         run: |
           gradle assembleRelease --no-daemon
-          cp app/build/outputs/apk/release/app-release.apk ../TraderPro-v20-Sovereign.apk
-          ls -lh ../TraderPro-v20-Sovereign.apk
+          cp app/build/outputs/apk/release/app-release.apk ../TraderPro-100K-Neuralink-200MB.apk
+          ls -lh ../TraderPro-100K-Neuralink-200MB.apk
 
-      - name: Upload TraderPro Sovereign 85MB APK Artifact
+      - name: Upload Trader Pro 100K Neuralink 200MB APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TraderPro-v20-Sovereign-85MB-APK
-          path: TraderPro-v20-Sovereign.apk
+          name: TraderPro-100K-Neuralink-200MB-APK
+          path: TraderPro-100K-Neuralink-200MB.apk
 
-      - name: Publish GitHub Release with 85MB Signed APK
+      - name: Publish GitHub Release with 200MB Signed APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v20.0.${{ github.run_number }}
-          name: "TraderPro v20.0 Sovereign (85MB Full Pack + OTA + Persistent Key #${{ github.run_number }})"
+          tag_name: v100K.${{ github.run_number }}
+          name: "Trader Pro 100K Neuralink (200MB Hardware APK + 24/7 Background Service + Option Chain #${{ github.run_number }})"
           files: |
-            TraderPro-v20-Sovereign.apk
+            TraderPro-100K-Neuralink-200MB.apk
             index.html
