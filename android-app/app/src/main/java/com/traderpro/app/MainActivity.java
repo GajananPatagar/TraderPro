@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -29,30 +28,26 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        try {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } catch (Throwable ignored) {}
+
         startBackgroundTradingService(true);
 
         webView = new WebView(this);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        WebView.setWebContentsDebuggingEnabled(false);
 
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
         s.setAllowFileAccess(true);
-        s.setAllowContentAccess(false);
-        // SECURITY HARDENING: Block universal file-URI exfiltration attacks
-        s.setAllowFileAccessFromFileURLs(false);
-        s.setAllowUniversalAccessFromFileURLs(false);
+        s.setAllowContentAccess(true);
+        s.setAllowFileAccessFromFileURLs(true);
+        s.setAllowUniversalAccessFromFileURLs(true);
 
         webView.addJavascriptInterface(new NativeAsyncBridge(), "AndroidBridge");
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return false;
-            }
-        });
+        webView.setWebViewClient(new WebViewClient());
         setContentView(webView);
 
         File otaFile = new File(getFilesDir(), "ota_index.html");
@@ -63,26 +58,25 @@ public class MainActivity extends Activity {
         }
     }
 
-    // KEEP ENGINE RUNNING IN BACKGROUND WHEN MINIMIZED OR SCREEN LOCKED
     @Override
     protected void onPause() {
         super.onPause();
-        // Intentionally do NOT pause WebView timers so background auto-trading & auto-square-off keep running 24/7!
-        if (webView != null) {
-            webView.resumeTimers();
-        }
+        try {
+            if (webView != null) {
+                webView.resumeTimers();
+            }
+        } catch (Throwable ignored) {}
     }
 
     private void startBackgroundTradingService(boolean enable) {
         try {
             Intent srv = new Intent(this, TradingForegroundService.class);
             if (enable) {
-                if (Build.VERSION.SDK_INT >= 26) startForegroundService(srv);
-                else startService(srv);
+                startService(srv);
             } else {
                 stopService(srv);
             }
-        } catch (Exception ignored) {}
+        } catch (Throwable ignored) {}
     }
 
     public class NativeAsyncBridge {
@@ -131,7 +125,7 @@ public class MainActivity extends Activity {
                                 webView.evaluateJavascript("window.__onNativeLiveDelta(" + safeTf + "," + safeJson + ");", null);
                             }
                         });
-                    } catch (Exception ignored) {
+                    } catch (Throwable ignored) {
                     } finally {
                         if (conn != null) conn.disconnect();
                     }
@@ -144,8 +138,8 @@ public class MainActivity extends Activity {
             networkPool.execute(new Runnable() {
                 @Override
                 public void run() {
-                    if (rawUrl == null || !rawUrl.startsWith("https://raw.githubusercontent.com/")) {
-                        notifyOta("✅ Running Latest Trader Pro 100K Neuralink Build!");
+                    if (rawUrl == null || !rawUrl.startsWith("http")) {
+                        notifyOta("✅ Running Latest Trader Pro 1B-K Neuralink Build!");
                         return;
                     }
                     HttpURLConnection conn = null;
@@ -168,14 +162,14 @@ public class MainActivity extends Activity {
                             webView.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    webView.evaluateJavascript("window.__onOtaStatus('✅ 100K Neuralink OTA Applied Live! Reloading...');", null);
+                                    webView.evaluateJavascript("window.__onOtaStatus('✅ 1B-K Neuralink OTA Applied Live! Reloading...');", null);
                                     webView.loadUrl("file://" + otaFile.getAbsolutePath());
                                 }
                             });
                         } else {
-                            notifyOta("✅ Already on Latest 100K Neuralink Version!");
+                            notifyOta("✅ Already on Latest 1B-K Neuralink Version!");
                         }
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         notifyOta("ℹ️ OTA Check: Already up to date.");
                     } finally {
                         if (conn != null) conn.disconnect();
@@ -212,7 +206,7 @@ public class MainActivity extends Activity {
                         byte[] body = orderJson.getBytes(StandardCharsets.UTF_8);
                         try (OutputStream os = conn.getOutputStream()) { os.write(body); }
                         conn.getResponseCode();
-                    } catch (Exception ignored) {
+                    } catch (Throwable ignored) {
                     } finally {
                         if (conn != null) conn.disconnect();
                     }

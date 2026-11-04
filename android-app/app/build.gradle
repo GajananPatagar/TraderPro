@@ -7,9 +7,9 @@ android {
     defaultConfig {
         applicationId "com.traderpro.app"
         minSdk 24
-        targetSdk 34
-        versionCode 100000
-        versionName "100K-Neuralink-200MB"
+        targetSdk 33
+        versionCode 200000
+        versionName "1B-Neuralink-25MB"
     }
     signingConfigs {
         persistentKey {
@@ -29,7 +29,7 @@ android {
         }
     }
     androidResources {
-        noCompress 'bin', 'dat'
+        noCompress 'bin'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

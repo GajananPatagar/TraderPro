@@ -5,13 +5,12 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="Trader Pro"
         android:icon="@drawable/ic_launcher"
         android:roundIcon="@drawable/ic_launcher"
         android:allowBackup="false"
-        android:usesCleartextTraffic="false"
+        android:usesCleartextTraffic="true"
         android:hardwareAccelerated="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         <activity
