@@ -33,8 +33,10 @@
       --amber-bright: #fbbf24;
       --amber-bg: rgba(245, 158, 11, 0.15);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; cursor: default !important; }
+    * { box-sizing: border-box; margin: 0; padding: 0; min-width: 0; -webkit-tap-highlight-color: transparent; user-select: none; cursor: default !important; }
+    input, textarea, select { user-select: text !important; -webkit-user-select: text !important; }
     html, body {
+      width: 100%; max-width: 100vw; overflow-x: hidden !important;
       background-color: var(--bg-base);
       background-image:
         linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
@@ -159,8 +161,8 @@
     .filter-row::-webkit-scrollbar { display: none; }
     .pill-btn { padding: 7px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; background: #0b0b10; border: 1px solid rgba(255, 255, 255, 0.12); color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.3px; }
     .pill-btn.active { background: var(--crimson); color: #ffffff; border-color: var(--crimson-bright); font-weight: 900; }
-    .search-row { margin-top: 8px; display: flex; gap: 6px; }
-    .search-inp { flex: 1; background: #0b0b10; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 9px 12px; font-size: 12px; color: #fff; text-transform: uppercase; }
+    .search-row { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+    .search-inp { flex: 1 1 200px; width: 100%; background: #0b0b10; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; color: #fff; text-transform: uppercase; }
     .btn-primary { background: var(--crimson); color: #fff; font-weight: 900; font-size: 12px; padding: 9px 14px; border-radius: 8px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.3px; }
     .btn-danger { background: #2a060a; border: 1px solid var(--crimson-bright); color: #ff4d57; font-weight: 900; font-size: 11px; padding: 6px 11px; border-radius: 7px; text-transform: uppercase; }
 
@@ -320,7 +322,7 @@
     .chat-shell {
       background: #0b0b10; border: 1.5px solid rgba(229, 9, 20, 0.45);
       border-radius: 14px; display: flex; flex-direction: column;
-      height: calc(100vh - 295px); min-height: 440px; overflow: hidden;
+      height: 520px; max-height: 74vh; width: 100%; overflow: hidden;
     }
     .chat-messages {
       flex: 1; overflow-y: auto; padding: 12px;
@@ -492,7 +494,7 @@
       </div>
     </section>
 
-    <section>
+    <section id="sniperControlSection">
       <div class="filter-row">
         <button onclick="setTab('ACTIVE'); setSetupFilter('ALL');" id="sflt-ALL" class="pill-btn active">01 • Sniper Trades (90%+)</button>
         <button onclick="setTab('ACTIVE'); setSetupFilter('TAKEN');" id="sflt-TAKEN" class="pill-btn" style="border-color:var(--emerald-bright); color:var(--emerald-bright);">✅ My Entered Trades</button>
@@ -6714,7 +6716,7 @@
         showToast('💎 Switched to REAL MONEY MODE (Live Groww Execution Active)');
       }
       appState.lastRenderedSignature = '';
-      recomputeAndPatchUI();
+      recomputeAndPatchUI(true);
     }
 
     function triggerOtaUpdate() {
@@ -7038,27 +7040,57 @@
       if (wrap && !wrap.contains(ev.target)) closeStockDropdown();
     });
 
+    const GLOBAL_TO_NSE_PROXY = {
+      'MICROSOFT': { nse: 'INFY', note: 'US Tech Proxy → NSE:INFY & TCS' },
+      'MSFT': { nse: 'INFY', note: 'US Tech Proxy → NSE:INFY & TCS' },
+      'NVIDIA': { nse: 'TCS', note: 'AI Tech Proxy → NSE:TCS & DIXON' },
+      'NVDA': { nse: 'TCS', note: 'AI Tech Proxy → NSE:TCS & DIXON' },
+      'APPLE': { nse: 'DIXON', note: 'Apple India EMS Partner → NSE:DIXON' },
+      'AAPL': { nse: 'DIXON', note: 'Apple India EMS Partner → NSE:DIXON' },
+      'TESLA': { nse: 'M_M', note: 'EV Proxy → NSE:M_M & TATAPOWER' },
+      'TSLA': { nse: 'M_M', note: 'EV Proxy → NSE:M_M & TATAPOWER' },
+      'GOOGLE': { nse: 'HCLTECH', note: 'Cloud Tech Proxy → NSE:HCLTECH' },
+      'AMAZON': { nse: 'ETERNAL', note: 'Quick Commerce Proxy → NSE:ETERNAL' }
+    };
+
     function renderStockDropdownItems(query) {
       const menu = document.getElementById('stockDropdownMenu');
       if (!menu) return;
+      const cleanQ = (query || '').trim().toUpperCase();
       const matches = PRELOADED_UNIVERSE.filter(x =>
-        !query || x.symbol.includes(query) || x.name.toUpperCase().includes(query) || x.sector.toUpperCase().includes(query)
+        !cleanQ || x.symbol.includes(cleanQ) || x.name.toUpperCase().includes(cleanQ) || x.sector.toUpperCase().includes(cleanQ)
       ).slice(0, 25);
 
       const headerRow = `
         <div class="dd-item" style="background:#14141d; position:sticky; top:0; z-index:2;">
-          <span style="font-size:10px; color:#a1a1aa; font-weight:900;">SELECT STOCK TO ADD FOR SNIPER TRADES OR MONITOR ONLY (${PRELOADED_UNIVERSE.length} F&amp;O STOCKS)</span>
-          <button onclick="closeStockDropdown()" style="color:var(--crimson-bright); font-weight:900; font-size:11px;">✕ CLOSE</button>
+          <span style="font-size:10px; color:#d4d4d8; font-weight:900;">SELECT STOCK FOR SNIPER TRADES OR MONITOR ONLY (${PRELOADED_UNIVERSE.length} NSE STOCKS)</span>
+          <button onclick="closeStockDropdown()" style="color:var(--crimson-bright); font-weight:900; font-size:11px; padding:2px 6px;">✕ CLOSE</button>
         </div>`;
+
+      let customAddRow = '';
+      if (cleanQ && !PRELOADED_UNIVERSE.some(x => x.symbol === cleanQ)) {
+        const proxy = GLOBAL_TO_NSE_PROXY[cleanQ];
+        customAddRow = `
+          <div class="dd-item" style="background:rgba(229,9,20,0.12); border-left:3px solid var(--crimson-bright); flex-wrap:wrap;">
+            <div>
+              <strong style="color:#fff; font-size:12.5px;">➕ Add "${escapeHtml(cleanQ)}" ${proxy ? '(' + proxy.note + ')' : 'as Custom NSE Ticker'}</strong>
+              <span style="font-size:10px; color:var(--text-secondary); display:block;">Choose whether to enable live Sniper Trades or Monitor Only:</span>
+            </div>
+            <div style="display:flex; gap:5px; flex-shrink:0;">
+              <button onclick="selectStockMode('${proxy ? proxy.nse : cleanQ}', 'TRADE')" class="badge badge-emerald" style="padding:6px 9px;">🔥 Give Trades</button>
+              <button onclick="selectStockMode('${proxy ? proxy.nse : cleanQ}', 'MONITOR')" class="badge badge-indigo" style="padding:6px 9px;">👁️ Monitor Only</button>
+            </div>
+          </div>`;
+      }
 
       const rows = matches.map(item => {
         const modeTag = item.watchMode === 'MONITOR'
-          ? '<span class="badge badge-amber">👁️ MONITOR ONLY</span>'
-          : '<span class="badge badge-emerald">🔥 TRADE ENABLED</span>';
+          ? '<span class="badge badge-amber">👁️ MONITOR</span>'
+          : '<span class="badge badge-emerald">🔥 TRADE</span>';
         return `
-          <div class="dd-item">
+          <div class="dd-item" style="flex-wrap:wrap;">
             <div>
-              <div style="display:flex; align-items:center; gap:6px;">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                 <strong style="color:#fff; font-size:13px;">${escapeHtml(item.symbol)}</strong>
                 ${modeTag}
                 <span style="font-size:10px; color:var(--text-secondary);">Lot: ${item.lotSize || 100}</span>
@@ -7066,14 +7098,14 @@
               <span style="font-size:10.5px; color:var(--text-muted);">${escapeHtml(item.name)} • ${escapeHtml(item.sector)}</span>
             </div>
             <div style="display:flex; gap:5px; flex-shrink:0;">
-              <button onclick="selectStockMode('${item.symbol}', 'TRADE')" class="badge badge-emerald" style="padding:5px 8px; cursor:pointer;">🔥 Give Trades</button>
-              <button onclick="selectStockMode('${item.symbol}', 'MONITOR')" class="badge badge-indigo" style="padding:5px 8px; cursor:pointer;">👁️ Monitor Only</button>
-              <button onclick="closeStockDropdown(); openOptionChainModal('${item.symbol}');" class="badge badge-rose" style="padding:5px 8px; cursor:pointer;">⛓️ Options</button>
+              <button onclick="selectStockMode('${item.symbol}', 'TRADE')" class="badge badge-emerald" style="padding:5px 8px;">🔥 Trade</button>
+              <button onclick="selectStockMode('${item.symbol}', 'MONITOR')" class="badge badge-indigo" style="padding:5px 8px;">👁️ Monitor</button>
+              <button onclick="closeStockDropdown(); openOptionChainModal('${item.symbol}');" class="badge badge-rose" style="padding:5px 8px;">⛓️ Options</button>
             </div>
           </div>`;
       }).join('');
 
-      menu.innerHTML = headerRow + rows;
+      menu.innerHTML = headerRow + customAddRow + rows;
     }
 
     function selectStockMode(symbol, mode) {
@@ -7692,7 +7724,7 @@
       showToast(`🔄 Re-Locked All 24 Stock Signals & Reset Cuts at ${nowStr}!`);
     }
 
-    function recomputeAndPatchUI() {
+    function recomputeAndPatchUI(forceFullRender = false) {
       const mktSession = getNseMarketSessionStatus();
       const sBadge = document.getElementById('mktSessionBadge');
       const sDetail = document.getElementById('mktSessionDetail');
@@ -7722,11 +7754,11 @@
       runAutoSquareOffGuard(bySym);
 
       const q = appState.searchQuery;
-      const filtered = q ? analyzed.filter(x => x.symbol.includes(q) || x.sector.toUpperCase().includes(q)) : analyzed;
+      const filtered = q ? analyzed.filter(x => x.symbol.includes(q) || x.name.toUpperCase().includes(q) || x.sector.toUpperCase().includes(q)) : analyzed;
       const active = filtered.filter(x => x.direction === 'BUY' || x.direction === 'SELL');
       const radar = filtered.filter(x => x.direction === 'WAITING');
-      active.sort((a, b) => (b.confluenceScore - a.confluenceScore) || (b.winProb - a.winProb));
-      radar.sort((a, b) => (b.confluenceScore - a.confluenceScore) || (b.winProb - a.winProb));
+      active.sort((a, b) => ((b.priorityPinned ? 1 : 0) - (a.priorityPinned ? 1 : 0)) || (b.confluenceScore - a.confluenceScore) || (b.winProb - a.winProb));
+      radar.sort((a, b) => ((b.priorityPinned ? 1 : 0) - (a.priorityPinned ? 1 : 0)) || (b.confluenceScore - a.confluenceScore) || (b.winProb - a.winProb));
 
       appState.allAnalyzed = analyzed;
       appState.activeSignals = active;
@@ -7762,23 +7794,44 @@
       const qCount = Object.keys(aiBrain.quarantined).length;
       const aiBiasEl = document.getElementById('hudNewsBias');
       const aiSubEl = document.getElementById('hudNewsCount');
-      if (aiBiasEl) aiBiasEl.textContent = `100K GEN #${aiBrain.generation} • ${aiBrain.minScore}%`;
+      if (aiBiasEl) aiBiasEl.textContent = `1B-K GEN #${aiBrain.generation} • ${aiBrain.minScore}%`;
       if (aiSubEl) aiSubEl.textContent = `${qCount} Blocked • ${aiBrain.maxStagnantMins}m Time-Stop`;
+
+      // Show Sniper filter/search controls ONLY on ACTIVE and RADAR tabs so CHAT, OPTIONS, AIBRAIN, BOOK, and SETUP have clean full-screen space!
+      const ctrlSec = document.getElementById('sniperControlSection');
+      if (ctrlSec) {
+        ctrlSec.style.display = (appState.tab === 'ACTIVE' || appState.tab === 'RADAR') ? 'block' : 'none';
+      }
+
+      // CRITICAL KEYBOARD & FOCUS GUARD:
+      // If user is currently typing inside ANY input/select/textarea (like #humanChatInp or #customSymInp), NEVER wipe grid.innerHTML on background scan ticks!
+      const activeEl = document.activeElement;
+      const isUserTyping = Boolean(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT' || activeEl.tagName === 'TEXTAREA'));
+      if (isUserTyping && !forceFullRender) {
+        return;
+      }
 
       const grid = document.getElementById('cardsGrid');
       if (appState.tab === 'CHAT') {
-        renderHumanAiChatView(grid, analyzed, mktSession);
-        appState.lastRenderedSignature = 'CHAT';
+        // Only mount the Chat Shell once! Never destroy #humanChatInp on background 2.5s ticks!
+        if (appState.lastRenderedSignature !== 'CHAT' || !document.getElementById('humanChatInp') || forceFullRender) {
+          renderHumanAiChatView(grid, analyzed, mktSession);
+          appState.lastRenderedSignature = 'CHAT';
+        }
         return;
       }
       if (appState.tab === 'OPTIONS') {
-        renderFullOptionChainTab(grid, analyzed);
-        appState.lastRenderedSignature = 'OPTIONS';
+        if (appState.lastRenderedSignature !== 'OPTIONS_' + __selectedOptionChainSym || forceFullRender) {
+          renderFullOptionChainTab(grid, analyzed);
+          appState.lastRenderedSignature = 'OPTIONS_' + __selectedOptionChainSym;
+        }
         return;
       }
       if (appState.tab === 'AIBRAIN') {
-        renderAiBrainView(grid, analyzed);
-        appState.lastRenderedSignature = 'AIBRAIN';
+        if (appState.lastRenderedSignature !== 'AIBRAIN' || forceFullRender) {
+          renderAiBrainView(grid, analyzed);
+          appState.lastRenderedSignature = 'AIBRAIN';
+        }
         return;
       }
       if (appState.tab === 'POSITIONS') {
@@ -7787,17 +7840,14 @@
         return;
       }
       if (appState.tab === 'OVERNIGHT') {
-        renderOvernightView(grid, analyzed);
-        appState.lastRenderedSignature = 'OVERNIGHT';
-        return;
-      }
-      if (appState.tab === 'NEWS') {
-        renderNewsView(grid, analyzed);
-        appState.lastRenderedSignature = 'NEWS';
+        if (appState.lastRenderedSignature !== 'OVERNIGHT' || forceFullRender) {
+          renderOvernightView(grid, analyzed);
+          appState.lastRenderedSignature = 'OVERNIGHT';
+        }
         return;
       }
       if (appState.tab === 'SETTINGS') {
-        if (appState.lastRenderedSignature !== 'SETTINGS') {
+        if (appState.lastRenderedSignature !== 'SETTINGS' || forceFullRender) {
           renderSettingsView(grid);
           appState.lastRenderedSignature = 'SETTINGS';
         }
@@ -8318,9 +8368,23 @@
     }
 
     function sendQuickChatPrompt(txt) {
-      const inp = document.getElementById('humanChatInp');
-      if (inp) inp.value = txt;
       submitHumanAiChat(txt);
+    }
+
+    function appendChatBubblesToDom() {
+      const box = document.getElementById('chatMessagesBox');
+      if (!box) {
+        recomputeAndPatchUI(true);
+        return;
+      }
+      box.innerHTML = humanChatHistory.map(m => `
+        <div class="chat-bubble ${m.role}">
+          <div class="mono" style="font-size:9.5px; color:${m.role === 'ai' ? 'var(--crimson-bright)' : '#ffd6d9'}; font-weight:900; margin-bottom:4px;">
+            ${m.role === 'ai' ? '🧠 1B-K HUMAN PRO TRADER AI • ' + m.ts : '👤 YOU • ' + m.ts}
+          </div>
+          <div>${m.html}</div>
+        </div>`).join('');
+      box.scrollTop = box.scrollHeight;
     }
 
     function submitHumanAiChat(forcedTxt) {
@@ -8336,7 +8400,21 @@
       const replyHtml = generateHumanTraderAiResponse(q, rawText);
       humanChatHistory.push({ role: 'ai', ts: new Date().toLocaleTimeString(), html: replyHtml });
       playChime('LOCK');
-      recomputeAndPatchUI();
+      appendChatBubblesToDom();
+    }
+
+    function formatOptionPickHtml(symbol) {
+      const oc = computeOptionChainForSymbol(symbol);
+      const b = oc.bestOption;
+      return `<div style="background:#0a0a0f; border:1px solid rgba(255,255,255,0.12); border-left:3px solid ${b.type === 'CE' ? 'var(--emerald-bright)' : 'var(--crimson-bright)'}; border-radius:8px; padding:9px 11px; margin-top:6px;">` +
+             `<b>⛓️ ${oc.symTitle} (Spot ₹${oc.spot.toFixed(2)} • ATM ${oc.atmStrike} • IV ${oc.baseIv}%):</b><br>` +
+             `• <b>1️⃣ Best Option to Buy:</b> <b style="color:var(--emerald-bright);">${b.contractName} (${b.type === 'CE' ? 'CALL' : 'PUT'}) @ ₹${b.entryPrem}</b> (1 Lot = ${oc.lotSize} Qty = ₹${b.lotCostInr.toLocaleString('en-IN')})<br>` +
+             `• <b>2️⃣ Profit Exit Targets:</b> <b>T1 ₹${b.t1Prem} (+₹${b.t1ProfitInr.toLocaleString('en-IN')})</b> • <b>T2 ₹${b.t2Prem}</b> • <b>T3 ₹${b.t3Prem}</b><br>` +
+             `• <b>3️⃣ Safety Stop-Loss:</b> <b style="color:var(--crimson-bright);">₹${b.slPrem}</b> (Delta Δ=${b.delta} • 0-Loss Breakeven at +0.50R)<br>` +
+             `<div style="display:flex; gap:6px; margin-top:7px; flex-wrap:wrap;">` +
+             `<button onclick="openOptionChainModal('${symbol}')" class="badge badge-emerald" style="padding:5px 9px;">⛓️ Full ${symbol} Option Chain</button>` +
+             `<button onclick="openOptionTradePosition('${oc.symbol}', '${b.contractName}', ${b.entryPrem}, ${b.slPrem}, ${b.t1Prem}, ${b.t2Prem}, ${b.t3Prem}, ${b.lotSize})" class="badge badge-rose" style="padding:5px 9px;">⚡ Buy 1 Lot ${b.contractName}</button>` +
+             `</div></div>`;
     }
 
     function generateHumanTraderAiResponse(q, rawText) {
@@ -8345,96 +8423,105 @@
       const active = appState.activeSignals || [];
       const openList = Object.values(appState.openPositions);
 
-      // 1. Check if user commanded to Square Off / Exit trades
+      // 1. Direct Execution: Square Off / Exit All
       if (q.includes('SQUARE OFF') || q.includes('EXIT ALL') || q.includes('CLOSE ALL')) {
         const cnt = openList.length;
         if (cnt === 0) {
-          return `<b>💼 Open Book Check:</b> You currently have <b>0 open trades</b>, so nothing needs to be squared off.`;
+          return `<b>💼 Open Book Check:</b> You currently have <b>0 open trades</b>, so your capital is 100% safe in cash.`;
         }
         squareOffAllPositions('Commanded via Human AI Chat');
         return `<b>🚨 Executed Immediately:</b> I have squared off all <b>${cnt} open position(s)</b> and locked your realized P&amp;L in your wallet!`;
       }
 
-      // 2. Check if user commanded to Train the Neuralink Brain
-      if (q.includes('TRAIN') || q.includes('EPOCH') || q.includes('LEARN')) {
+      // 2. Direct Execution: Train Neural Brain
+      if (q.includes('TRAIN') || q.includes('EPOCH') || q.includes('UPGRADE BRAIN')) {
         runV1000OnlineBackpropagation(1000000);
-        return `<b>🧠 1B-K Neuralink Training Complete:</b> I just ran <b>+1,000,000 Cortical STDP + Adam Backpropagation Epochs</b> across all 100 Quantitative Domains and 180 NSE F&amp;O stocks!<br>` +
+        return `<b>🧠 1 Billion-K Neuralink Training Complete:</b> I just ran <b>+1,000,000 Cortical STDP + Adam Backpropagation Epochs</b> across all 100 Quantitative Domains and 180 NSE F&amp;O stocks!<br>` +
                `• <b>New Brain Generation:</b> <code>Gen #${aiBrain.generation}</code><br>` +
                `• <b>Synaptic Loss MSE:</b> <code>${V1000_SYNAPTIC_TENSOR.lastLossMse}</code>`;
       }
 
-      // 3. Check if user asked to switch Mode (Demo vs Real)
+      // 3. Direct Execution: Switch Demo / Real Mode
       if (q.includes('REAL MODE') || q.includes('SWITCH TO REAL')) {
         switchTradingEnv('REAL');
-        return `<b>💎 Switched to REAL MONEY MODE:</b> Live Groww order routing is now active.`;
+        return `<b>💎 Switched to REAL MONEY MODE:</b> Live Groww execution mode is now active.`;
       }
       if (q.includes('DEMO MODE') || q.includes('SWITCH TO DEMO')) {
         switchTradingEnv('DEMO');
         return `<b>🧪 Switched to DEMO PAPER MODE:</b> Practice safely with your ₹1,00,000 virtual wallet.`;
       }
 
-      // 4. Check if user mentioned any specific Stock Symbol or Index (NIFTY, BANKNIFTY, or any of the 180 F&O stocks)
-      let matchedStock = null;
+      // 4. Find ALL mentioned NSE stocks in the user's message (supports asking about 1, 2, or more stocks at once!)
+      const matchedStocks = [];
       for (let i = 0; i < PRELOADED_UNIVERSE.length; i++) {
         const sym = PRELOADED_UNIVERSE[i].symbol;
         const cleanName = PRELOADED_UNIVERSE[i].name.toUpperCase().split(' ')[0];
-        const regex = new RegExp('\\b' + sym.replace('_', '[&_ ]?') + '\\b');
-        if (regex.test(q) || (cleanName.length >= 4 && q.includes(cleanName))) {
-          matchedStock = all.find(x => x.symbol === sym);
-          break;
+        if (q.includes(sym) || (cleanName.length >= 4 && q.includes(cleanName))) {
+          const stObj = all.find(x => x.symbol === sym);
+          if (stObj && !matchedStocks.some(m => m.symbol === sym)) {
+            matchedStocks.push(stObj);
+          }
         }
       }
-      if (!matchedStock && q.includes('ZOMATO')) matchedStock = all.find(x => x.symbol === 'ETERNAL');
-
-      // Check if user wants to BUY / TAKE TRADE on a matched stock
-      if (matchedStock && (q.includes('BUY ') || q.includes('SHORT ') || q.includes('SELL ') || q.includes('TAKE TRADE') || q.includes('ENTER '))) {
-        if (!mkt.isOpenForEntry) {
-          return `<b>🏛️ Market Closed Protection:</b> You asked me to trade <b>${matchedStock.symbol}</b>, but the NSE Market is currently closed (<b>${mkt.label}</b>). I block off-market executions so your account is never hit with fake weekend/after-hours fills. Tap below to inspect its Option Chain for the next session:` +
-                 `<div style="margin-top:8px;"><button onclick="openOptionChainModal('${matchedStock.symbol}')" class="badge badge-emerald" style="padding:6px 10px;">⛓️ Open ${matchedStock.symbol} Option Chain</button></div>`;
-        }
-        openTradePosition(matchedStock.symbol, 'AI_CHAT_COMMAND');
-        return `<b>⚡ Trade Executed for You:</b> I have entered <b>${matchedStock.rawDirection} ${matchedStock.qty} shares of ${matchedStock.symbol} @ ₹${matchedStock.entry.toFixed(2)}</b>!<br>` +
-               `• <b>Profit Target 1:</b> ₹${matchedStock.t1.toFixed(2)} • <b>Target 2:</b> ₹${matchedStock.t2.toFixed(2)}<br>` +
-               `• <b>Safety Stop-Loss:</b> ₹${matchedStock.sl.toFixed(2)} (Auto-locks to ₹0 Loss at +0.50R &amp; 15m Time-Stop active).`;
+      if (q.includes('ZOMATO') && !matchedStocks.some(m => m.symbol === 'ETERNAL')) {
+        const z = all.find(x => x.symbol === 'ETERNAL');
+        if (z) matchedStocks.push(z);
       }
 
-      // Check if user asked about NIFTY / BANKNIFTY or Option Chain
+      // 5. Check if user asked for NIFTY / BANKNIFTY / OPTION CHAIN
       if (q.includes('NIFTY') || q.includes('OPTION')) {
-        const targetIdx = q.includes('BANK') ? 'BANKNIFTY' : (matchedStock ? matchedStock.symbol : 'NIFTY');
-        const oc = computeOptionChainForSymbol(targetIdx);
-        const b = oc.bestOption;
-        return `<b>⛓️ Human Pro Trader Option Chain Verdict for ${oc.symTitle} (Spot ₹${oc.spot.toFixed(2)}):</b><br>` +
-               `• <b>ATM Strike:</b> <code>${oc.atmStrike}</code> • <b>Implied Volatility (IV):</b> <code>${oc.baseIv}%</code> • <b>Lot Size:</b> <code>${oc.lotSize} Qty</code><br>` +
-               `• <b>1️⃣ Best Option to Buy:</b> <b style="color:var(--emerald-bright);">${b.contractName} (${b.type === 'CE' ? 'CALL' : 'PUT'}) @ ₹${b.entryPrem}</b> (1 Lot = ₹${b.lotCostInr.toLocaleString('en-IN')})<br>` +
-               `• <b>2️⃣ Option Profit Targets:</b> <b>T1 ₹${b.t1Prem} (+₹${b.t1ProfitInr.toLocaleString('en-IN')})</b> • <b>T2 ₹${b.t2Prem}</b> • <b>T3 ₹${b.t3Prem}</b><br>` +
-               `• <b>3️⃣ Option Stop-Loss:</b> <b style="color:var(--crimson-bright);">₹${b.slPrem}</b> (Delta Δ=${b.delta})<br>` +
-               `<div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">` +
-               `<button onclick="openOptionChainModal('${targetIdx}')" class="badge badge-emerald" style="padding:6px 10px;">⛓️ View Full ${targetIdx} Option Chain</button>` +
-               `<button onclick="openOptionTradePosition('${oc.symbol}', '${b.contractName}', ${b.entryPrem}, ${b.slPrem}, ${b.t1Prem}, ${b.t2Prem}, ${b.t3Prem}, ${b.lotSize})" class="badge badge-rose" style="padding:6px 10px;">⚡ Buy 1 Lot ${b.contractName}</button>` +
-               `</div>`;
+        const blocks = [];
+        const asksBoth = (q.includes('NIFTY') && q.includes('BANK')) || q.includes('BOTH');
+        if (asksBoth) {
+          blocks.push(formatOptionPickHtml('NIFTY'));
+          blocks.push(formatOptionPickHtml('BANKNIFTY'));
+        } else if (q.includes('BANK')) {
+          blocks.push(formatOptionPickHtml('BANKNIFTY'));
+        } else if (matchedStocks.length > 0) {
+          matchedStocks.slice(0, 2).forEach(st => blocks.push(formatOptionPickHtml(st.symbol)));
+        } else {
+          blocks.push(formatOptionPickHtml('NIFTY'));
+          blocks.push(formatOptionPickHtml('BANKNIFTY'));
+        }
+        return `<b>🗣️ 1B-K Human Pro Trader Option Chain Analysis:</b>` + blocks.join('');
       }
 
-      // If user asked about a specific stock ("Analyse RELIANCE", "How is DLF", etc.)
-      if (matchedStock) {
-        const s = matchedStock;
-        const oc = computeOptionChainForSymbol(s.symbol);
-        const b = oc.bestOption;
-        const t1Gain = Math.round(Math.abs(s.t1 - s.entry) * s.qty);
-        return `<b>📊 Complete 1B-K Pro Trader Diagnosis for ${s.symbol} (${s.sector}):</b><br>` +
-               `• <b>Live NSE Price:</b> <b>₹${s.ltp.toFixed(2)} (${s.changePct >= 0 ? '+' : ''}${s.changePct}%)</b> | <b>Kalman Fair Value:</b> ₹${s.kalmanPrice} | <b>VWAP:</b> ₹${s.vwap}<br>` +
-               `• <b>100-Domain Score:</b> <b>${s.confluenceScore}%</b> (${s.passedDomains}/100 Domains Passed) • <b>1B Neural:</b> ${s.neuralConfidence}% • <b>Monte Carlo:</b> ${s.mcWinProb}%<br>` +
-               `• <b>Status:</b> <b style="color:${s.direction !== 'WAITING' ? 'var(--emerald-bright)' : 'var(--amber-bright)'};">${s.direction !== 'WAITING' ? '🟢 ACTIVE ' + s.direction + ' SNIPER' : s.tradeStage}</b><br>` +
-               `• <b>Cash Trade Plan (${s.qty} sh):</b> Enter <b>₹${s.entry.toFixed(2)}</b> → Target 1 <b>₹${s.t1.toFixed(2)} (+₹${t1Gain.toLocaleString('en-IN')})</b> → Stop-Loss <b>₹${s.sl.toFixed(2)}</b><br>` +
-               `• <b>Best Option Strike:</b> <b>${b.contractName} @ ₹${b.entryPrem}</b> → Target <b>₹${b.t1Prem} (+₹${b.t1ProfitInr.toLocaleString('en-IN')}/lot)</b><br>` +
-               `<div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">` +
-               `<button onclick="openTradePosition('${s.symbol}', 'MANUAL')" class="badge badge-emerald" style="padding:6px 10px;">⚡ Trade ${s.symbol} Cash (${s.qty} sh)</button>` +
-               `<button onclick="openOptionChainModal('${s.symbol}')" class="badge badge-rose" style="padding:6px 10px;">⛓️ ${s.symbol} Option Chain</button>` +
-               `<button onclick="showAuditModal('${s.symbol}')" class="badge badge-indigo" style="padding:6px 10px;">🔍 100-Domain Audit</button>` +
-               `</div>`;
+      // 6. Check if user commanded to BUY / SELL a specific stock
+      if (matchedStocks.length > 0 && (q.includes('BUY ') || q.includes('SHORT ') || q.includes('SELL ') || q.includes('TAKE TRADE') || q.includes('ENTER '))) {
+        const targetSt = matchedStocks[0];
+        if (!mkt.isOpenForEntry) {
+          return `<b>🏛️ Market Closed Protection (${mkt.label}):</b> I blocked the live order on <b>${targetSt.symbol}</b> because NSE is currently closed. Here is its Option Chain &amp; next-session setup:` +
+                 formatOptionPickHtml(targetSt.symbol);
+        }
+        openTradePosition(targetSt.symbol, 'AI_CHAT_COMMAND');
+        return `<b>⚡ Trade Executed for You:</b> Entered <b>${targetSt.rawDirection} ${targetSt.qty} shares of ${targetSt.symbol} @ ₹${targetSt.entry.toFixed(2)}</b>!<br>` +
+               `• <b>Profit Target 1:</b> ₹${targetSt.t1.toFixed(2)} • <b>Target 2:</b> ₹${targetSt.t2.toFixed(2)}<br>` +
+               `• <b>0-Loss Stop-Loss:</b> ₹${targetSt.sl.toFixed(2)} (Auto-locks to ₹0 Loss at +0.50R &amp; ${aiBrain.maxStagnantMins}m Time-Stop active).`;
       }
 
-      // If user asked about Open Positions / Book / Portfolio
-      if (q.includes('OPEN') || q.includes('BOOK') || q.includes('PORTFOLIO') || q.includes('P&L') || q.includes('LOSS')) {
+      // 7. If user asked to analyse 1 or more specific stocks (e.g. "Analyse RELIANCE and HDFCBANK")
+      if (matchedStocks.length > 0) {
+        return `<b>🗣️ 1B-K Human Pro Trader Stock Diagnosis (${matchedStocks.length} Stock${matchedStocks.length > 1 ? 's' : ''}):</b>` +
+          matchedStocks.slice(0, 3).map(s => {
+            const oc = computeOptionChainForSymbol(s.symbol);
+            const b = oc.bestOption;
+            const t1Gain = Math.round(Math.abs(s.t1 - s.entry) * s.qty);
+            return `<div style="background:#0a0a0f; border:1px solid rgba(255,255,255,0.12); border-left:3px solid ${s.rawDirection === 'BUY' ? 'var(--emerald-bright)' : 'var(--crimson-bright)'}; border-radius:8px; padding:9px 11px; margin-top:7px;">` +
+                   `<b>📊 ${s.symbol} (${s.sector}) — Live ₹${s.ltp.toFixed(2)} (${s.changePct >= 0 ? '+' : ''}${s.changePct}%):</b><br>` +
+                   `• <b>100-Domain Score:</b> <b>${s.confluenceScore}%</b> (${s.passedDomains}/100 Domains) • <b>Neural:</b> ${s.neuralConfidence}% • <b>MC Win:</b> ${s.mcWinProb}%<br>` +
+                   `• <b>Verdict:</b> <b style="color:${s.direction !== 'WAITING' ? 'var(--emerald-bright)' : 'var(--amber-bright)'};">${s.direction !== 'WAITING' ? '🟢 READY TO ' + s.direction : s.tradeStage}</b><br>` +
+                   `• <b>1️⃣ Cash Entry:</b> ${s.rawDirection} ${s.qty} sh @ <b>₹${s.entry.toFixed(2)}</b> → <b>2️⃣ Exit T1:</b> <b>₹${s.t1.toFixed(2)} (+₹${t1Gain.toLocaleString('en-IN')})</b> → <b>3️⃣ Stop:</b> <b style="color:var(--crimson-bright);">₹${s.sl.toFixed(2)}</b><br>` +
+                   `• <b>⛓️ Best Option:</b> <b>${b.contractName} @ ₹${b.entryPrem}</b> → Target <b>₹${b.t1Prem} (+₹${b.t1ProfitInr.toLocaleString('en-IN')}/lot)</b><br>` +
+                   `<div style="display:flex; gap:6px; margin-top:7px; flex-wrap:wrap;">` +
+                   `<button onclick="openTradePosition('${s.symbol}', 'MANUAL')" class="badge badge-emerald" style="padding:5px 9px;">⚡ Trade ${s.symbol} Cash</button>` +
+                   `<button onclick="openOptionChainModal('${s.symbol}')" class="badge badge-rose" style="padding:5px 9px;">⛓️ ${s.symbol} Option Chain</button>` +
+                   `<button onclick="showAuditModal('${s.symbol}')" class="badge badge-indigo" style="padding:5px 9px;">🔍 100-Domains</button>` +
+                   `</div></div>`;
+          }).join('');
+      }
+
+      // 8. If user asked about Open Positions / Book / Portfolio
+      if (q.includes('OPEN') || q.includes('BOOK') || q.includes('PORTFOLIO') || q.includes('P&L')) {
         if (openList.length === 0) {
           return `<b>💼 Open Book Diagnosis:</b> You currently have <b>0 open trades</b>. Your ${appState.tradingEnv} realized P&amp;L is <b>${appState.demoRealizedPnl >= 0 ? '+₹' : '-₹'}${Math.abs(appState.demoRealizedPnl).toFixed(2)}</b> (${appState.demoWins}W / ${appState.demoLosses}L).`;
         }
@@ -8443,7 +8530,7 @@
                `<div style="margin-top:8px;"><button onclick="squareOffAllPositions('AI Chat Square Off')" class="btn-danger">🚨 Square Off All Now</button></div>`;
       }
 
-      // Default: Give the #1 Best Sniper Trade + Best Option Trade across the entire 180-stock NSE market!
+      // 9. Default: Top 2 Stock Sniper Picks + NIFTY 50 Option Pick across the entire market!
       const pool = active.length > 0 ? active : all.slice().sort((a, b) => b.confluenceScore - a.confluenceScore);
       const top1 = pool[0];
       const top2 = pool[1];
@@ -9283,7 +9370,7 @@
         const el = document.getElementById('sflt-' + k);
         if (el) el.className = (k === f) ? 'pill-btn active' : 'pill-btn';
       });
-      recomputeAndPatchUI();
+      recomputeAndPatchUI(true);
     }
 
     function setTab(t) {
@@ -9293,7 +9380,7 @@
         if (el) el.className = (k === t) ? 'nav-item active' : 'nav-item';
       });
       appState.lastRenderedSignature = '';
-      recomputeAndPatchUI();
+      recomputeAndPatchUI(true);
     }
 
     function onQuickSearch() {
