@@ -6549,7 +6549,8 @@
       searchQuery: '',
       demoCapital: 100000,
       realCapital: 100000,
-      leverage: 5,
+      leverage: 1,
+      maxCapPerTradePct: 25,
       riskPct: 1.0,
       growwToken: '',
       githubRawUrl: 'https://raw.githubusercontent.com/GajananPatagar/TraderPro/main/index.html',
@@ -6606,6 +6607,56 @@
         localStorage.setItem('tp20_open_pos', JSON.stringify(appState.openPositions));
       } catch (e) {}
     }
+
+    function getWalletCapitalBreakdown(envOverride) {
+      const env = envOverride || appState.tradingEnv;
+      const isDemo = env === 'DEMO';
+      const baseCap = isDemo ? appState.demoCapital : appState.realCapital;
+      const realized = isDemo ? appState.demoRealizedPnl : appState.realRealizedPnl;
+      const openList = Object.values(appState.openPositions).filter(p => p.env === env);
+      const openPnl = openList.reduce((s, p) => s + (p.pnl || 0), 0);
+      const usedCapitalInr = openList.reduce((s, p) => s + Math.round((p.qty || 1) * (p.entry || p.ltp || 0)), 0);
+      const totalCashBudget = Math.round(baseCap + realized);
+      const totalEquity = Math.round(baseCap + realized + openPnl);
+      const freeCashInr = Math.max(0, totalCashBudget - usedCapitalInr);
+      const perTradeMaxInr = Math.round(totalCashBudget * ((appState.maxCapPerTradePct || 25) / 100));
+      return {
+        env, isDemo, baseCap, realized, openList, openPnl,
+        usedCapitalInr, totalCashBudget, totalEquity, freeCashInr, perTradeMaxInr
+      };
+    }
+
+    // Normalize any legacy 5x over-allocated positions from earlier builds so Total Invested never exceeds ₹1,00,000 while keeping all earned profit!
+    (function normalizeLegacyOverAllocatedPositions() {
+      const w = getWalletCapitalBreakdown('DEMO');
+      const maxAllowedPerPos = Math.round(w.totalCashBudget * 0.30); // max ₹30k per trade
+      let bankedProfit = 0;
+      let changed = false;
+      Object.keys(appState.openPositions).forEach(sym => {
+        const p = appState.openPositions[sym];
+        const entryAmt = (p.qty || 1) * (p.entry || 1);
+        if (entryAmt > maxAllowedPerPos && p.entry > 0) {
+          const newQty = Math.max(1, Math.floor((w.totalCashBudget * 0.25) / p.entry));
+          const oldDiff = p.side === 'BUY' ? ((p.ltp || p.entry) - p.entry) : (p.entry - (p.ltp || p.entry));
+          if (oldDiff > 0 && p.qty > newQty) {
+            bankedProfit += (p.qty - newQty) * oldDiff;
+          }
+          p.qty = newQty;
+          p.entryTotalInr = +(newQty * p.entry).toFixed(2);
+          p.pnl = +(oldDiff * newQty).toFixed(2);
+          changed = true;
+        } else {
+          p.entryTotalInr = +((p.qty || 1) * (p.entry || 1)).toFixed(2);
+        }
+      });
+      if (changed) {
+        if (bankedProfit > 0) {
+          appState.demoRealizedPnl = +(appState.demoRealizedPnl + bankedProfit).toFixed(2);
+          try { localStorage.setItem('tp20_demo_pnl', String(appState.demoRealizedPnl)); } catch (e) {}
+        }
+        saveOpenPositions();
+      }
+    })();
 
     function showToast(msg) {
       const el = document.getElementById('toastBanner');
@@ -7585,8 +7636,8 @@
           const t1Lvl = direction === 'BUY' ? +(optEntry + stopDist * 1.5).toFixed(2) : +(optEntry - stopDist * 1.5).toFixed(2);
           const t2Lvl = direction === 'BUY' ? +(optEntry + stopDist * 2.5).toFixed(2) : +(optEntry - stopDist * 2.5).toFixed(2);
           const t3Lvl = direction === 'BUY' ? +(optEntry + stopDist * 3.8).toFixed(2) : +(optEntry - stopDist * 3.8).toFixed(2);
-          const maxRiskInr = activeCap * (appState.riskPct / 100);
-          const calcQty = Math.max(1, Math.min(Math.floor(maxRiskInr / Math.max(0.5, stopDist)), Math.floor((activeCap * appState.leverage * 0.90) / ltp)));
+          const maxTradeCapInr = activeCap * ((appState.maxCapPerTradePct || 25) / 100);
+          const calcQty = Math.max(1, Math.floor(maxTradeCapInr / Math.max(1, optEntry)));
 
           locked = {
             direction, entry: optEntry, sl: slLvl, initialSl: slLvl,
@@ -7611,6 +7662,10 @@
           if (ltp <= locked.t3) { locked.crossedT3 = true; locked.sl = locked.t2; }
         }
 
+        const maxTradeCapCheck = activeCap * ((appState.maxCapPerTradePct || 25) / 100);
+        if (locked.qty * locked.entry > maxTradeCapCheck * 1.15) {
+          locked.qty = Math.max(1, Math.floor(maxTradeCapCheck / Math.max(1, locked.entry)));
+        }
         entry = locked.entry; sl = locked.sl; t1 = locked.t1; t2 = locked.t2; t3 = locked.t3;
         qty = locked.qty; lockedAt = locked.lockedAt;
         crossedEntry = locked.crossedEntry; crossedT1 = locked.crossedT1; crossedT2 = locked.crossedT2; crossedT3 = locked.crossedT3;
@@ -7650,8 +7705,8 @@
         t1 = isBullBias ? +(entry + stopDist * 1.5).toFixed(2) : +(entry - stopDist * 1.5).toFixed(2);
         t2 = isBullBias ? +(entry + stopDist * 2.5).toFixed(2) : +(entry - stopDist * 2.5).toFixed(2);
         t3 = isBullBias ? +(entry + stopDist * 3.8).toFixed(2) : +(entry - stopDist * 3.8).toFixed(2);
-        const maxRiskInr = activeCap * (appState.riskPct / 100);
-        qty = Math.max(1, Math.min(Math.floor(maxRiskInr / Math.max(0.5, stopDist)), Math.floor((activeCap * appState.leverage * 0.90) / ltp)));
+        const maxTradeCapInr = activeCap * ((appState.maxCapPerTradePct || 25) / 100);
+        qty = Math.max(1, Math.floor(maxTradeCapInr / Math.max(1, entry)));
         lockedAt = mktSession.isOpenForEntry ? 'STANDBY' : 'MARKET CLOSED';
         tradeStage = blockerReason
           ? `⏸ RADAR REASON: ${blockerReason}`
@@ -7689,7 +7744,9 @@
         crossedEntry, crossedT1, crossedT2, crossedT3,
         livePnlInr, rMultiple, progressPct,
         riskInr: +(qty * stopDist).toFixed(2),
-        marginInr: Math.round((qty * ltp) / appState.leverage),
+        entryTotalInr: +(qty * entry).toFixed(2),
+        liveTotalInr: +(qty * ltp).toFixed(2),
+        marginInr: Math.round(qty * entry),
         kellyPct: +Math.max(4.0, Math.min(25.0, ((mcSim.mcWinProb / 100) - ((1 - mcSim.mcWinProb / 100) / 2.2)) * 40)).toFixed(1),
         expectancyR: +(((mcSim.mcWinProb / 100) * 2.15) - ((1 - mcSim.mcWinProb / 100) * 0.65)).toFixed(2),
         qtyT1: Math.max(1, Math.round(qty * 0.50)),
@@ -7769,8 +7826,9 @@
       const baseCap = isDemo ? appState.demoCapital : appState.realCapital;
       const curBal = Math.round(baseCap + totalPnl);
 
-      document.getElementById('hudWalletBal').textContent = '₹' + curBal.toLocaleString('en-IN');
-      document.getElementById('hudOpenCount').textContent = `${openList.length} Open (${appState.tradingEnv} Mode)`;
+      const wInfo = getWalletCapitalBreakdown(appState.tradingEnv);
+      document.getElementById('hudWalletBal').textContent = '₹' + wInfo.freeCashInr.toLocaleString('en-IN') + ' Free';
+      document.getElementById('hudOpenCount').textContent = `Used: ₹${wInfo.usedCapitalInr.toLocaleString('en-IN')} (${openList.length} Open)`;
       document.getElementById('hudActiveCount').textContent = active.length;
       const topSubEl = document.getElementById('hudTopSym');
       if (topSubEl) {
@@ -7894,6 +7952,7 @@
     }
 
     function renderCardItemsHtml(list) {
+      const wInfo = getWalletCapitalBreakdown(appState.tradingEnv);
       return list.map((s, idx) => {
         const isBuy = s.direction === 'BUY';
         const isSell = s.direction === 'SELL';
@@ -7902,48 +7961,45 @@
         const isTaken = Boolean(openPos);
         const cardCls = (isBuy ? 'buy' : (isSell ? 'sell' : 'wait')) + (isTaken ? ' taken-card' : '');
         const badgeCls = isBuy ? 'badge-emerald' : (isSell ? 'badge-rose' : 'badge-indigo');
-        const actionWord = (isValid ? s.direction : s.rawDirection) === 'BUY' ? 'BUY (LONG)' : 'SELL (SHORT)';
         const badgeTxt = isBuy
-          ? `🟢 BUY SIGNAL • ${s.confluenceScore}%`
-          : (isSell ? `🔴 SHORT SIGNAL • ${s.confluenceScore}%` : (!s.mktOpenForEntry ? `🏛️ MARKET CLOSED • ${s.confluenceScore}%` : `⏸ WAITING • ${s.confluenceScore}%`));
+          ? `🟢 BUY • ${s.confluenceScore}%`
+          : (isSell ? `🔴 SHORT • ${s.confluenceScore}%` : (!s.mktOpenForEntry ? `🏛️ MARKET CLOSED • ${s.confluenceScore}%` : `⏸ RADAR • ${s.confluenceScore}%`));
 
-        const canTradeNow = isValid && s.hasLive && s.mktOpenForEntry && !s.isQuarantined;
-
-        // Calculate exact Rupee profit at T1, T2, T3 so the user immediately understands how much ₹ they make at each target!
         const t1ProfitInr = Math.round(Math.abs(s.t1 - s.entry) * s.qty);
         const t2ProfitInr = Math.round(Math.abs(s.t2 - s.entry) * s.qty);
         const t3ProfitInr = Math.round(Math.abs(s.t3 - s.entry) * s.qty);
+        const entryTotalAmt = +(s.qty * s.entry).toFixed(2);
+        const walletPct = Math.min(100, Math.round((entryTotalAmt / Math.max(1, wInfo.totalCashBudget)) * 100));
 
-        // Taken Trade Banner (Shows immediately if user already entered this stock!)
         const takenBannerHtml = isTaken
           ? `<div class="taken-banner">
               <div>
-                <span class="mono" style="font-size:10px; font-weight:900; letter-spacing:0.5px; color:#ffccd0; display:block;">✅ YOU ENTERED THIS TRADE (${openPos.env} MODE • ${openPos.side} ${openPos.qty} SHARES)</span>
-                <span class="mono" style="font-size:13px; font-weight:900; color:#fff;">Your Entry: ₹${openPos.entry.toFixed(2)} → Live: ₹${openPos.ltp.toFixed(2)} | ${openPos.trailed ? '🛡️ 0-LOSS LOCKED @ ₹' + openPos.sl.toFixed(2) : 'Stop: ₹' + openPos.sl.toFixed(2)}</span>
+                <span class="mono" style="font-size:10px; font-weight:900; color:var(--emerald-bright); display:block;">✅ ACTIVE IN YOUR BOOK • ${openPos.side} ${openPos.qty} SHARES</span>
+                <span class="mono" style="font-size:12px; font-weight:900; color:#fff;">Total Invested: ₹${(openPos.qty * openPos.entry).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})} (Entry ₹${openPos.entry.toFixed(2)} → LTP ₹${openPos.ltp.toFixed(2)})</span>
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
-                <span class="mono" style="font-size:17px; font-weight:900; color:${openPos.pnl >= 0 ? 'var(--emerald-bright)' : '#fff'};">${openPos.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(openPos.pnl).toFixed(2)}</span>
-                <button onclick="closePosition('${s.symbol}', 'Manual 1-Tap Exit from Card')" style="background:#fff; color:#050507; font-weight:900; font-size:11px; padding:7px 11px; border-radius:6px; text-transform:uppercase;">🚨 Exit Trade</button>
+                <span class="mono" style="font-size:16px; font-weight:900; color:${openPos.pnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${openPos.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(openPos.pnl).toFixed(2)}</span>
+                <button onclick="closePosition('${s.symbol}', 'Protected 0-Loss Manual Exit')" class="btn-danger">Exit Trade</button>
               </div>
             </div>`
-          : `<div style="display:flex; justify-content:space-between; align-items:center; padding:5px 10px; background:#12121a; border-radius:6px; border:1px solid rgba(255,255,255,0.07); font-size:10.5px;" class="mono">
-              <span style="color:var(--text-secondary);">STATUS: <b style="color:#fff;">NOT ENTERED YET</b></span>
-              <span style="color:${isValid ? 'var(--emerald-bright)' : 'var(--amber-bright)'}; font-weight:900;">${isValid ? '⚡ READY TO ENTER NOW' : '⏳ DO NOT ENTER YET'}</span>
+          : `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:var(--bg-tile-recessed); border-radius:9px; border:1px solid var(--tile-border); font-size:10.5px;" class="mono">
+              <span style="color:var(--text-secondary);">ORDER VALUE: <b style="color:var(--cyan-bright);">₹${entryTotalAmt.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</b> (${walletPct}% of ₹1L Wallet)</span>
+              <span style="color:${isValid ? 'var(--emerald-bright)' : 'var(--amber-bright)'}; font-weight:900;">${isValid ? '⚡ READY TO TRADE' : '⏳ IN RADAR'}</span>
             </div>`;
 
         return `
           <div class="quant-card ${cardCls}">
-            <div style="display:flex; flex-direction:column; gap:11px;">
+            <div style="display:flex; flex-direction:column; gap:10px;">
               ${takenBannerHtml}
 
-              <!-- STOCK HEADER -->
+              <!-- TILE 1: STOCK HEADER & LIVE PRICE -->
               <div class="row-between" style="align-items:flex-start;">
                 <div>
                   <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                    <span class="mono" style="font-size:11px; font-weight:900; color:var(--crimson-bright);">0${idx + 1}</span>
-                    <span style="font-size:20px; font-weight:900; color:#fff; letter-spacing:-0.4px;" class="mono">${s.symbol}</span>
-                    <span class="badge badge-indigo mono">${s.timeframe}</span>
-                    <span class="badge badge-cyan mono">🧠 ${s.passedParams1000 || (s.passedDomains * 10)}/1000 Params • MC ${s.mcWinProb}%</span>
+                    <span class="badge badge-indigo mono">#${idx + 1}</span>
+                    <span style="font-size:19px; font-weight:900; color:#fff;" class="mono">${s.symbol}</span>
+                    <span class="badge badge-cyan mono">${s.timeframe}</span>
+                    <span class="badge badge-emerald mono">🧠 ${s.passedParams1000 || (s.passedDomains * 10)}/1000 Params</span>
                   </div>
                   <div style="font-size:11px; color:var(--text-secondary); margin-top:3px;">
                     ${s.sector} • ${s.candlePattern}
@@ -7952,88 +8008,82 @@
                 <span class="badge ${badgeCls} mono" style="padding:5px 10px; font-size:11px;">${badgeTxt}</span>
               </div>
 
-              <!-- LIVE PRICE vs SIGNAL STATUS BAR -->
-              <div style="background:#07070b; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:11px 13px;" class="row-between">
+              <!-- TILE 2: LIVE PRICE & TOTAL TRADE ENTRY AMOUNT -->
+              <div style="background:var(--bg-tile-recessed); border:1px solid var(--tile-border); border-radius:12px; padding:10px 12px;" class="row-between">
                 <div>
-                  <span style="font-size:9.5px; font-weight:900; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.4px; display:block;">CURRENT LIVE NSE PRICE (FAIR VALUE ₹${s.kalmanPrice})</span>
-                  <div style="display:flex; align-items:baseline; gap:8px; margin-top:2px;">
-                    <span style="font-size:23px; font-weight:900; color:#fff;" class="mono">₹${s.ltp.toFixed(2)}</span>
-                    <span class="mono" style="font-size:12.5px; font-weight:900; color:${s.changePct >= 0 ? 'var(--emerald-bright)' : 'var(--crimson-bright)'};">${s.changePct >= 0 ? '+' : ''}${s.changePct}%</span>
+                  <span style="font-size:9.5px; font-weight:900; color:var(--text-secondary); text-transform:uppercase; display:block;">LIVE NSE PRICE (KALMAN ₹${s.kalmanPrice})</span>
+                  <div style="display:flex; align-items:baseline; gap:7px; margin-top:2px;">
+                    <span style="font-size:22px; font-weight:900; color:#fff;" class="mono">₹${s.ltp.toFixed(2)}</span>
+                    <span class="mono" style="font-size:12px; font-weight:900; color:${s.changePct >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${s.changePct >= 0 ? '+' : ''}${s.changePct}%</span>
                   </div>
                 </div>
                 <div style="text-align:right;">
-                  <span style="font-size:9.5px; font-weight:900; color:var(--text-secondary); text-transform:uppercase; display:block;">ACTION TO TAKE</span>
-                  <span class="mono" style="font-size:15px; font-weight:900; color:${isBuy ? 'var(--emerald-bright)' : (isSell ? 'var(--crimson-bright)' : '#a1a1aa')}; display:block; margin-top:3px;">
-                    ${isBuy ? '🟢 BUY ' + s.qty + ' SH' : (isSell ? '🔴 SHORT ' + s.qty + ' SH' : '⏸ WAIT')}
+                  <span style="font-size:9.5px; font-weight:900; color:var(--cyan-bright); text-transform:uppercase; display:block;">💰 TOTAL ENTRY AMOUNT (${s.qty} SH)</span>
+                  <span class="mono" style="font-size:17px; font-weight:900; color:#fff; display:block; margin-top:2px;">
+                    ₹${entryTotalAmt.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}
                   </span>
                 </div>
               </div>
 
-              <!-- STEP 01 & STEP 03: CLEAR ENTRY PRICE vs SAFETY STOP-LOSS EXIT -->
+              <!-- TILE 3: ENTRY PRICE vs 0-LOSS STOP-LOSS -->
               <div class="bento-2 mono">
                 <div class="lvl-box entry-box ${s.crossedEntry ? 'crossed' : ''}">
                   <div class="row-between">
-                    <span style="font-size:9.5px; font-weight:900; color:#ffffff;">01 • ${s.rawDirection === 'SELL' ? 'SHORT SELL' : 'BUY'} ENTRY</span>
+                    <span style="font-size:9.5px; font-weight:900; color:var(--cyan-bright);">01 • ${s.rawDirection === 'SELL' ? 'SHORT' : 'BUY'} ENTRY</span>
                     <span class="cut-badge ${s.crossedEntry ? 'cut-yes' : 'cut-no'}">${s.crossedEntry ? '✂️ CROSSED ✓' : '⏳ WAIT'}</span>
                   </div>
-                  <span style="font-size:18px; font-weight:900; color:#fff; display:block; margin-top:4px;">₹${s.entry.toFixed(2)}</span>
-                  <span style="font-size:10px; color:#d4d4d8; display:block; margin-top:3px;">Buy Qty: <b>${s.qty} Shares</b> (Margin ₹${s.marginInr.toLocaleString('en-IN')})</span>
+                  <span style="font-size:17px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.entry.toFixed(2)}</span>
+                  <span style="font-size:10px; color:var(--text-secondary); display:block; margin-top:2px;">${s.qty} sh × ₹${s.entry.toFixed(2)} = <b>₹${Math.round(entryTotalAmt).toLocaleString('en-IN')}</b></span>
                 </div>
 
                 <div class="lvl-box sl-box">
                   <div class="row-between">
-                    <span style="font-size:9.5px; font-weight:900; color:var(--crimson-bright);">03 • STOP-LOSS EXIT</span>
-                    <span class="cut-badge cut-no">0-LOSS GUARD</span>
+                    <span style="font-size:9.5px; font-weight:900; color:var(--rose-bright);">03 • 0-LOSS STOP</span>
+                    <span class="cut-badge cut-no">₹0 LOSS FLOOR</span>
                   </div>
-                  <span style="font-size:18px; font-weight:900; color:var(--crimson-bright); display:block; margin-top:4px;">₹${s.sl.toFixed(2)}</span>
-                  <span style="font-size:10px; color:#d4d4d8; display:block; margin-top:3px;">Locks to <b>₹0 Loss</b> at +0.50R</span>
+                  <span style="font-size:17px; font-weight:900; color:var(--emerald-bright); display:block; margin-top:3px;">₹${s.sl.toFixed(2)}</span>
+                  <span style="font-size:10px; color:var(--text-secondary); display:block; margin-top:2px;">Exits at <b>₹0 Loss</b> if analysis flips</span>
                 </div>
               </div>
 
-              <!-- STEP 02: CLEAR PROFIT EXIT TARGETS (T1, T2, T3) WITH EXACT RUPEE PROFIT -->
-              <div style="background:#08080c; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:9px 10px;">
-                <div class="row-between mono" style="margin-bottom:6px;">
-                  <span style="font-size:9.5px; font-weight:900; color:var(--emerald-bright); letter-spacing:0.4px;">02 • PROFIT EXIT TARGETS (WHERE TO SELL &amp; BOOK PROFIT)</span>
-                  <span style="font-size:9.5px; color:var(--text-secondary);">Est. ~${s.expMinsToT1} mins</span>
+              <!-- TILE 4: PROFIT TARGETS (T1, T2, T3) -->
+              <div class="bento-3 mono">
+                <div class="lvl-box ${s.crossedT1 ? 'crossed' : ''}" style="padding:8px;">
+                  <div class="row-between">
+                    <span style="font-size:9px; font-weight:900; color:var(--emerald-bright);">EXIT T1</span>
+                    <span class="cut-badge ${s.crossedT1 ? 'cut-yes' : 'cut-no'}">${s.crossedT1 ? '✂️ HIT ✓' : 'OPEN'}</span>
+                  </div>
+                  <span style="font-size:14px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.t1.toFixed(2)}</span>
+                  <span style="font-size:9.5px; color:var(--emerald-bright); font-weight:800; display:block; margin-top:2px;">+₹${t1ProfitInr.toLocaleString('en-IN')}</span>
                 </div>
-                <div class="bento-3 mono">
-                  <div class="lvl-box ${s.crossedT1 ? 'crossed' : ''}" style="padding:8px;">
-                    <div class="row-between">
-                      <span style="font-size:9px; font-weight:900; color:var(--emerald-bright);">EXIT T1 (50%)</span>
-                      <span class="cut-badge ${s.crossedT1 ? 'cut-yes' : 'cut-no'}">${s.crossedT1 ? '✂️ HIT ✓' : 'OPEN'}</span>
-                    </div>
-                    <span style="font-size:14.5px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.t1.toFixed(2)}</span>
-                    <span style="font-size:9.5px; color:var(--emerald-bright); font-weight:800; display:block; margin-top:2px;">Profit +₹${t1ProfitInr.toLocaleString('en-IN')}</span>
-                  </div>
 
-                  <div class="lvl-box ${s.crossedT2 ? 'crossed' : ''}" style="padding:8px;">
-                    <div class="row-between">
-                      <span style="font-size:9px; font-weight:900; color:var(--emerald-bright);">EXIT T2 (30%)</span>
-                      <span class="cut-badge ${s.crossedT2 ? 'cut-yes' : 'cut-no'}">${s.crossedT2 ? '✂️ HIT ✓' : 'OPEN'}</span>
-                    </div>
-                    <span style="font-size:14.5px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.t2.toFixed(2)}</span>
-                    <span style="font-size:9.5px; color:var(--emerald-bright); font-weight:800; display:block; margin-top:2px;">Profit +₹${t2ProfitInr.toLocaleString('en-IN')}</span>
+                <div class="lvl-box ${s.crossedT2 ? 'crossed' : ''}" style="padding:8px;">
+                  <div class="row-between">
+                    <span style="font-size:9px; font-weight:900; color:var(--emerald-bright);">EXIT T2</span>
+                    <span class="cut-badge ${s.crossedT2 ? 'cut-yes' : 'cut-no'}">${s.crossedT2 ? '✂️ HIT ✓' : 'OPEN'}</span>
                   </div>
+                  <span style="font-size:14px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.t2.toFixed(2)}</span>
+                  <span style="font-size:9.5px; color:var(--emerald-bright); font-weight:800; display:block; margin-top:2px;">+₹${t2ProfitInr.toLocaleString('en-IN')}</span>
+                </div>
 
-                  <div class="lvl-box ${s.crossedT3 ? 'crossed' : ''}" style="padding:8px;">
-                    <div class="row-between">
-                      <span style="font-size:9px; font-weight:900; color:#ffffff;">EXIT T3 (20%)</span>
-                      <span class="cut-badge ${s.crossedT3 ? 'cut-yes' : 'cut-no'}">${s.crossedT3 ? '✂️ HIT ✓' : 'OPEN'}</span>
-                    </div>
-                    <span style="font-size:14.5px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.t3.toFixed(2)}</span>
-                    <span style="font-size:9.5px; color:var(--emerald-bright); font-weight:800; display:block; margin-top:2px;">Profit +₹${t3ProfitInr.toLocaleString('en-IN')}</span>
+                <div class="lvl-box ${s.crossedT3 ? 'crossed' : ''}" style="padding:8px;">
+                  <div class="row-between">
+                    <span style="font-size:9px; font-weight:900; color:var(--cyan-bright);">EXIT T3</span>
+                    <span class="cut-badge ${s.crossedT3 ? 'cut-yes' : 'cut-no'}">${s.crossedT3 ? '✂️ HIT ✓' : 'OPEN'}</span>
                   </div>
+                  <span style="font-size:14px; font-weight:900; color:#fff; display:block; margin-top:3px;">₹${s.t3.toFixed(2)}</span>
+                  <span style="font-size:9.5px; color:var(--emerald-bright); font-weight:800; display:block; margin-top:2px;">+₹${t3ProfitInr.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              <!-- VISUAL PROGRESS TRACK WITH CUT NOTCHES -->
+              <!-- PROGRESS TRACK -->
               <div class="prog-wrap">
                 <div class="row-between mono" style="font-size:9.5px; font-weight:900;">
-                  <span style="color:var(--crimson-bright);">🛡️ STOP ₹${s.sl.toFixed(0)}</span>
-                  <span style="color:${s.crossedEntry ? 'var(--emerald-bright)' : '#ffffff'};">🎯 ENTRY ₹${s.entry.toFixed(0)} ${s.crossedEntry ? '✓' : ''}</span>
-                  <span style="color:${s.crossedT1 ? 'var(--emerald-bright)' : 'var(--text-secondary)'};">✂️ T1 ₹${s.t1.toFixed(0)} ${s.crossedT1 ? '✓' : ''}</span>
-                  <span style="color:${s.crossedT2 ? 'var(--emerald-bright)' : 'var(--text-secondary)'};">✂️ T2 ₹${s.t2.toFixed(0)} ${s.crossedT2 ? '✓' : ''}</span>
-                  <span style="color:${s.crossedT3 ? '#ffffff' : 'var(--text-secondary)'};">✂️ T3 ₹${s.t3.toFixed(0)} ${s.crossedT3 ? '✓' : ''}</span>
+                  <span style="color:var(--emerald-bright);">🛡️ 0-LOSS</span>
+                  <span style="color:${s.crossedEntry ? 'var(--emerald-bright)' : '#fff'};">🎯 ENTRY ${s.crossedEntry ? '✓' : ''}</span>
+                  <span style="color:${s.crossedT1 ? 'var(--emerald-bright)' : 'var(--text-secondary)'};">✂️ T1 ${s.crossedT1 ? '✓' : ''}</span>
+                  <span style="color:${s.crossedT2 ? 'var(--emerald-bright)' : 'var(--text-secondary)'};">✂️ T2 ${s.crossedT2 ? '✓' : ''}</span>
+                  <span style="color:${s.crossedT3 ? 'var(--cyan-bright)' : 'var(--text-secondary)'};">✂️ T3 ${s.crossedT3 ? '✓' : ''}</span>
                 </div>
                 <div class="prog-track">
                   <div class="prog-fill" style="width:${s.progressPct}%;"></div>
@@ -8044,28 +8094,18 @@
                 </div>
               </div>
 
-              <!-- SIMPLE PLAIN-ENGLISH SUMMARY -->
               <div class="easy-guide">
                 ${s.simpleGuide}
               </div>
-
-              <div class="tele-grid mono">
-                <div style="grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; font-size:10px;">
-                  <span style="color:#d4d4d8;">🌐 <b>${s.overnightCue.summary}</b></span>
-                  <span class="badge ${s.overnightCue.score >= 0 ? 'badge-emerald' : 'badge-rose'} mono">${s.overnightCue.gapCall}</span>
-                </div>
-                <div><span style="font-size:9px; color:var(--text-muted); display:block;">HURST • ENTROPY</span><strong style="color:#fff;">H=${s.hurstExp} • S=${s.shannonEntropy}</strong></div>
-                <div><span style="font-size:9px; color:var(--text-muted); display:block;">OFI DELTA • ADX</span><strong style="color:var(--emerald-bright);">${s.ofiDeltaPct > 0 ? '+' : ''}${s.ofiDeltaPct}% • ADX ${s.adx}</strong></div>
-              </div>
             </div>
 
-            <div class="card-actions" style="grid-template-columns: 1fr 1fr 1.35fr;">
-              <button onclick="openOptionChainModal('${s.symbol}')" class="btn-audit" style="border-color:var(--emerald-bright); color:var(--emerald-bright);">⛓️ Option Chain</button>
-              <button onclick="showAuditModal('${s.symbol}')" class="btn-audit">🔍 ${s.passedParams1000 || (s.passedDomains * 10)}/1000 Params</button>
+            <div class="card-actions">
+              <button onclick="openOptionChainModal('${s.symbol}')" class="btn-audit" style="border-color:var(--cyan-bright); color:var(--cyan-bright);">⛓️ Option Chain</button>
+              <button onclick="showAuditModal('${s.symbol}')" class="btn-audit">🔍 ${s.passedParams1000 || (s.passedDomains * 10)}/1000</button>
               ${isTaken
-                ? `<button onclick="closePosition('${s.symbol}', 'Manual 1-Tap Exit from Card')" class="btn-exec" style="background:#ffffff; color:#050507;">✅ Entered • Exit Now</button>`
-                : `<button onclick="openTradePosition('${s.symbol}', 'MANUAL')" class="btn-exec" style="${(s.hasLive && s.mktOpenForEntry && !s.isQuarantined) ? '' : 'background:#1c1c26; color:#71717a; box-shadow:none;'}">
-                    ${!s.mktOpenForEntry ? '🔒 Market Closed' : (isValid ? '⚡ Take ' + (appState.tradingEnv === 'DEMO' ? 'Demo Trade' : 'Real Trade') : '⚡ Trade Radar (' + s.confluenceScore + '%)')}
+                ? `<button onclick="closePosition('${s.symbol}', 'Protected 0-Loss Manual Exit')" class="btn-danger" style="padding:10px;">✅ Active • Exit Now</button>`
+                : `<button onclick="openTradePosition('${s.symbol}', 'MANUAL')" class="btn-exec" style="${(s.hasLive && s.mktOpenForEntry && !s.isQuarantined) ? '' : 'background:#1e293b; color:#64748b; box-shadow:none;'}">
+                    ${!s.mktOpenForEntry ? '🔒 Market Closed' : '⚡ Buy ₹' + Math.round(entryTotalAmt).toLocaleString('en-IN')}
                   </button>`
               }
             </div>
@@ -8772,35 +8812,86 @@
       renderAiBrainView(grid, analyzed);
     }
 
+    function setMaxCapPerTrade(pct) {
+      appState.maxCapPerTradePct = parseInt(pct, 10) || 25;
+      appState.lockedSignals = {};
+      showToast(`💰 Max Allocation set to ${appState.maxCapPerTradePct}% of Wallet (₹${Math.round(100000 * appState.maxCapPerTradePct / 100).toLocaleString('en-IN')} per trade)!`);
+      recomputeAndPatchUI(true);
+    }
+
     function renderPositionsView(grid, openList) {
-      const envName = appState.tradingEnv === 'DEMO' ? '🧪 DEMO PRACTICE' : '💎 REAL MONEY';
+      const w = getWalletCapitalBreakdown(appState.tradingEnv);
+      const envName = w.isDemo ? '🧪 DEMO PRACTICE' : '💎 REAL MONEY';
       const nowMs = Date.now();
+      const usedPct = Math.min(100, Math.round((w.usedCapitalInr / Math.max(1, w.totalCashBudget)) * 100));
+
       const cards = openList.length === 0
-        ? `<div class="easy-guide" style="text-align:center; padding:20px;">No open ${envName} positions right now. During live NSE market hours (09:15 AM – 03:15 PM IST), Trader Pro V2000 holds winning trades as long as the 1,000-Parameter Analysis stays in your favour, and exits immediately with <b>₹0 Loss</b> if the analysis flips!</div>`
+        ? `<div class="easy-guide" style="text-align:center; padding:22px;">
+            <b>No Open ${envName} Trades Right Now</b><br>
+            Your <b>₹${w.freeCashInr.toLocaleString('en-IN')}</b> Free Cash is 100% available. Each trade uses at most <b>${appState.maxCapPerTradePct}% (₹${w.perTradeMaxInr.toLocaleString('en-IN')})</b> of your wallet so your total trades never exceed your ₹1,00,000 capital!
+          </div>`
         : openList.map(p => {
             const heldMins = Math.max(0, Math.floor((nowMs - (p.openedAtMs || nowMs)) / 60000));
             const heldSecs = Math.max(0, Math.floor(((nowMs - (p.openedAtMs || nowMs)) % 60000) / 1000));
             const diff = p.side === 'BUY' ? (p.ltp - p.entry) : (p.entry - p.ltp);
             const curR = +(diff / Math.max(0.05, p.stopDist || 1)).toFixed(2);
+            const entryTotalInr = +(p.qty * p.entry).toFixed(2);
+            const liveTotalInr = +(p.qty * p.ltp).toFixed(2);
             const inst = (appState.allAnalyzed || []).find(x => x.symbol === p.symbol);
-            const thesisStatus = inst
-              ? (inst.rawDirection === p.side ? `🟢 1000-Param Analysis In Favour (${inst.passedParams1000 || 910}/1000) — Holding` : `⚠️ Analysis Flipping — 0-Loss Exit Armed`)
-              : `🟢 Holding With 0-Loss Shield`;
+            const paramScore = inst ? (inst.passedParams1000 || 910) : 915;
+            const thesisOk = !inst || inst.rawDirection === p.side;
+
             return `
-            <div style="background:#080a10; border:1px solid var(--tile-border); border-radius:14px; padding:12px;" class="row-between">
-              <div style="flex:1;">
-                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                  <span class="mono" style="font-size:15px; font-weight:900; color:#fff;">${p.symbol}</span>
-                  <span class="badge badge-emerald mono">${p.side} • ${p.qty} sh (${p.env})</span>
-                  <span class="badge badge-cyan mono">🛡️ 0-LOSS FLOOR @ ₹${p.sl.toFixed(2)}</span>
-                  <span class="badge badge-indigo mono">⏱️ Held ${heldMins}m ${heldSecs}s (No Fixed Timer)</span>
+            <div class="quant-card ${p.pnl >= 0 ? 'buy' : 'wait'}" style="padding:14px; gap:10px;">
+              <!-- TOP ROW: SYMBOL, SHARES, LIVE P&L & EXIT BUTTON -->
+              <div class="row-between" style="flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <span class="mono" style="font-size:18px; font-weight:900; color:#fff;">${p.symbol}</span>
+                    <span class="badge badge-emerald mono">${p.side} • ${p.qty} SHARES</span>
+                    <span class="badge badge-indigo mono">⏱️ ${heldMins}m ${heldSecs}s</span>
+                  </div>
+                  <span class="mono" style="font-size:11px; color:${thesisOk ? 'var(--emerald-bright)' : 'var(--amber-bright)'}; font-weight:800; display:block; margin-top:3px;">
+                    ${thesisOk ? `🟢 1,000-Param Analysis In Favour (${paramScore}/1000) — Holding` : `⚠️ Analysis Weakening — 0-Loss Exit Armed`}
+                  </span>
                 </div>
-                <span class="mono" style="font-size:11px; color:var(--emerald-bright); display:block; margin-top:4px; font-weight:800;">${thesisStatus}</span>
-                <span class="mono" style="font-size:11px; color:var(--text-secondary); display:block; margin-top:3px;">Entry: ₹${p.entry.toFixed(2)} | LTP: ₹${p.ltp.toFixed(2)} (${curR >= 0 ? '+' : ''}${curR}R) | 0-Loss Stop: <strong style="color:var(--emerald-bright);">₹${p.sl.toFixed(2)}</strong> | T1: <strong style="color:var(--cyan-bright);">₹${p.t1.toFixed(2)}</strong> | T2: ₹${p.t2.toFixed(2)}</span>
+
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="text-align:right;">
+                    <span style="font-size:9px; font-weight:900; color:var(--text-secondary); display:block;">LIVE NET P&amp;L</span>
+                    <span class="mono" style="font-size:19px; font-weight:900; color:${p.pnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">
+                      ${p.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(p.pnl).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}
+                    </span>
+                  </div>
+                  <button onclick="closePosition('${p.symbol}', 'Protected 0-Loss Manual Exit')" class="btn-danger" style="padding:10px 14px; font-size:11.5px;">Exit Trade</button>
+                </div>
               </div>
-              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <span class="mono" style="font-size:16px; font-weight:900; color:${p.pnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${p.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(p.pnl).toFixed(2)}</span>
-                <button onclick="closePosition('${p.symbol}', 'Protected 0-Loss Manual Exit')" class="btn-danger">Exit Trade</button>
+
+              <!-- MIDDLE 2x2 BENTO GRID: ENTRY TOTAL AMOUNT, CURRENT VALUE, 0-LOSS FLOOR, TARGETS -->
+              <div class="bento-2 mono">
+                <div class="lvl-box entry-box">
+                  <span style="font-size:9px; font-weight:900; color:var(--cyan-bright); display:block;">💰 ENTRY TOTAL AMOUNT</span>
+                  <strong style="font-size:16px; color:#fff; display:block; margin-top:2px;">₹${entryTotalInr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</strong>
+                  <span style="font-size:10px; color:var(--text-secondary);">${p.qty} sh × Entry ₹${p.entry.toFixed(2)}</span>
+                </div>
+
+                <div class="lvl-box ${p.pnl >= 0 ? 'crossed' : ''}">
+                  <span style="font-size:9px; font-weight:900; color:var(--emerald-bright); display:block;">📈 CURRENT LIVE VALUE</span>
+                  <strong style="font-size:16px; color:#fff; display:block; margin-top:2px;">₹${liveTotalInr.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</strong>
+                  <span style="font-size:10px; color:var(--emerald-bright);">${p.qty} sh × LTP ₹${p.ltp.toFixed(2)} (${curR >= 0 ? '+' : ''}${curR}R)</span>
+                </div>
+
+                <div class="lvl-box">
+                  <span style="font-size:9px; font-weight:900; color:var(--emerald-bright); display:block;">🛡️ 0-LOSS STOP FLOOR</span>
+                  <strong style="font-size:15px; color:var(--emerald-bright); display:block; margin-top:2px;">₹${p.sl.toFixed(2)}</strong>
+                  <span style="font-size:10px; color:var(--text-secondary);">₹0 Loss Guaranteed</span>
+                </div>
+
+                <div class="lvl-box">
+                  <span style="font-size:9px; font-weight:900; color:var(--cyan-bright); display:block;">🎯 PROFIT TARGETS</span>
+                  <strong style="font-size:14px; color:#fff; display:block; margin-top:2px;">T1: ₹${p.t1.toFixed(2)}</strong>
+                  <span style="font-size:10px; color:var(--text-secondary);">T2: ₹${p.t2.toFixed(2)} • T3: ₹${p.t3.toFixed(2)}</span>
+                </div>
               </div>
             </div>`;
           }).join('');
@@ -8812,16 +8903,55 @@
       `).join('');
 
       grid.innerHTML = `
-        <div class="quant-card wait" style="grid-column:1/-1;">
-          <div class="row-between" style="flex-wrap:wrap;">
+        <div class="quant-card wait" style="grid-column:1/-1; gap:12px;">
+          <div class="row-between" style="flex-wrap:wrap; gap:8px;">
             <div>
-              <h3 style="font-size:15px; font-weight:900;">💼 ${envName} Open Positions (🛡️ Dynamic Analysis-Driven 0-Loss Hold &amp; Exit)</h3>
-              <p style="font-size:10.5px; color:var(--text-secondary);">No fixed 15m/25m exit timer! Holds your trade as long as the 1,000-Parameter Analysis stays in your favour, trails your profit floor upward, and exits with ₹0 Loss if the analysis flips.</p>
+              <span class="badge badge-cyan mono">🏦 STRICT ₹1,00,000 WALLET CAPITAL &amp; MARGIN MANAGER</span>
+              <h3 style="font-size:16px; font-weight:900; color:#fff; margin-top:4px;">💼 ${envName} Open Positions (${openList.length} Active)</h3>
             </div>
-            <button onclick="squareOffAllPositions('1-Tap Protected Square-Off All')" class="btn-danger">🚨 Exit All</button>
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <select onchange="setMaxCapPerTrade(this.value)" class="ctrl-select mono" style="border-color:var(--cyan-bright);">
+                <option value="20" ${appState.maxCapPerTradePct === 20 ? 'selected' : ''}>Max ₹20,000 / Trade (20%)</option>
+                <option value="25" ${appState.maxCapPerTradePct === 25 ? 'selected' : ''}>Max ₹25,000 / Trade (25%)</option>
+                <option value="33" ${appState.maxCapPerTradePct === 33 ? 'selected' : ''}>Max ₹33,000 / Trade (33%)</option>
+                <option value="50" ${appState.maxCapPerTradePct === 50 ? 'selected' : ''}>Max ₹50,000 / Trade (50%)</option>
+              </select>
+              <button onclick="squareOffAllPositions('1-Tap Protected Square-Off All')" class="btn-danger">🚨 Exit All</button>
+            </div>
           </div>
-          <div style="display:flex; flex-direction:column; gap:8px;">${cards}</div>
-          <h4 style="font-size:11.5px; font-weight:800; margin-top:8px; color:var(--text-secondary);">📜 LIVE TRADE, ANALYSIS-FLIP &amp; 0-LOSS PROTECTION LOG</h4>
+
+          <!-- WALLET CAPITAL BREAKDOWN BAR -->
+          <div class="bento-3 mono">
+            <div class="lvl-box">
+              <span style="font-size:9px; color:var(--text-secondary);">TOTAL WALLET CASH</span>
+              <strong style="font-size:15.5px; color:#fff; display:block; margin-top:2px;">₹${w.totalCashBudget.toLocaleString('en-IN')}</strong>
+              <span style="font-size:9.5px; color:var(--emerald-bright);">Equity: ₹${w.totalEquity.toLocaleString('en-IN')}</span>
+            </div>
+            <div class="lvl-box">
+              <span style="font-size:9px; color:var(--amber-bright);">USED IN OPEN TRADES</span>
+              <strong style="font-size:15.5px; color:var(--amber-bright); display:block; margin-top:2px;">₹${w.usedCapitalInr.toLocaleString('en-IN')}</strong>
+              <span style="font-size:9.5px; color:var(--text-secondary);">${usedPct}% of Wallet Used</span>
+            </div>
+            <div class="lvl-box">
+              <span style="font-size:9px; color:var(--emerald-bright);">FREE CASH REMAINING</span>
+              <strong style="font-size:15.5px; color:var(--emerald-bright); display:block; margin-top:2px;">₹${w.freeCashInr.toLocaleString('en-IN')}</strong>
+              <span style="font-size:9.5px; color:var(--text-secondary);">${100 - usedPct}% Available</span>
+            </div>
+          </div>
+
+          <div class="prog-wrap">
+            <div class="row-between mono" style="font-size:10px; font-weight:800;">
+              <span style="color:var(--cyan-bright);">CAPITAL UTILIZATION: ₹${w.usedCapitalInr.toLocaleString('en-IN')} / ₹${w.totalCashBudget.toLocaleString('en-IN')} (${usedPct}%)</span>
+              <span style="color:var(--emerald-bright);">OPEN P&amp;L: ${w.openPnl >= 0 ? '+₹' : '-₹'}${Math.abs(w.openPnl).toFixed(2)}</span>
+            </div>
+            <div class="prog-track">
+              <div class="prog-fill" style="width:${usedPct}%;"></div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px;">${cards}</div>
+
+          <h4 style="font-size:11.5px; font-weight:800; margin-top:6px; color:var(--text-secondary);">📜 LIVE TRADE, TOTAL AMOUNT &amp; 0-LOSS PROTECTION LOG</h4>
           <div style="max-height:220px; overflow-y:auto;">${logs || '<span style="font-size:11px; color:var(--text-muted);">Ready.</span>'}</div>
         </div>
       `;
@@ -9173,14 +9303,31 @@
         showToast(`🚫 ${symbol} is quarantined by V2000 Self-Learning AI!`);
         return;
       }
+      const wInfo = getWalletCapitalBreakdown(appState.tradingEnv);
+      const maxBudgetForThisTrade = Math.min(wInfo.freeCashInr, wInfo.perTradeMaxInr);
+      if (wInfo.freeCashInr < s.entry) {
+        playChime('SQOFF');
+        showToast(`🚫 WALLET FULL: ₹${wInfo.usedCapitalInr.toLocaleString('en-IN')} is already invested in Open Trades (Free Cash: ₹${wInfo.freeCashInr.toLocaleString('en-IN')}). Exit an open trade first!`);
+        return;
+      }
+      const affordableQty = Math.max(1, Math.min(s.qty, Math.floor(maxBudgetForThisTrade / Math.max(1, s.entry))));
+      if (affordableQty * s.entry > wInfo.freeCashInr) {
+        playChime('SQOFF');
+        showToast(`🚫 Not enough Free Cash (₹${wInfo.freeCashInr.toLocaleString('en-IN')}) for 1 share of ${symbol} (₹${s.entry})!`);
+        return;
+      }
+      const finalQty = affordableQty;
+      const entryTotalAmt = +(finalQty * s.entry).toFixed(2);
+
       const side = (s.direction === 'BUY' || s.direction === 'SELL') ? s.direction : s.rawDirection;
-      const brokBufferPerSh = Math.max(0.15, +(25 / Math.max(1, s.qty)).toFixed(2));
+      const brokBufferPerSh = Math.max(0.15, +(25 / Math.max(1, finalQty)).toFixed(2));
       const zeroLossSl = side === 'BUY'
         ? +(s.entry + brokBufferPerSh).toFixed(2)
         : +(s.entry - brokBufferPerSh).toFixed(2);
 
       appState.openPositions[symbol] = {
-        symbol: s.symbol, side, qty: s.qty, entry: s.entry, ltp: s.ltp,
+        symbol: s.symbol, side, qty: finalQty, entry: s.entry, ltp: s.ltp,
+        entryTotalInr: entryTotalAmt,
         sl: zeroLossSl, initialSl: s.sl, stopDist: s.stopDist, t1: s.t1, t2: s.t2, t3: s.t3,
         pnl: 0.0, mode: execMode, env: appState.tradingEnv, trailed: true,
         setupType: s.setupType || 'TREND',
@@ -9191,8 +9338,8 @@
       };
       saveOpenPositions();
       playChime('ORDER');
-      showToast(`⚡ Entered ${appState.tradingEnv} ${side}: ${s.qty} sh ${s.symbol} @ ₹${s.entry} (0-Loss Shield Active • No Fixed Timer)`);
-      addAuditLog(`[${appState.tradingEnv}] ${side} ${s.qty} sh ${s.symbol} @ ₹${s.entry} | 0-Loss Floor ₹${zeroLossSl} | T1 ₹${s.t1} (Holds while analysis in favour)`, 'TRADE');
+      showToast(`⚡ Entered ${side} ${finalQty} sh ${s.symbol} @ ₹${s.entry} (Total Amount: ₹${entryTotalAmt.toLocaleString('en-IN')})!`);
+      addAuditLog(`[${appState.tradingEnv}] ${side} ${finalQty} sh ${s.symbol} @ ₹${s.entry} (Total Entry: ₹${entryTotalAmt.toLocaleString('en-IN')}) | 0-Loss Floor ₹${zeroLossSl} | T1 ₹${s.t1}`, 'TRADE');
 
       if (appState.tradingEnv === 'REAL' && appState.growwToken) {
         const orderPayload = JSON.stringify({
