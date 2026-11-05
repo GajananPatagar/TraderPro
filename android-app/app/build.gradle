@@ -3,7 +3,7 @@ plugins {
 }
 android {
     namespace 'com.traderpro.app'
-    compileSdk 34
+    compileSdk 35
     defaultConfig {
         applicationId "com.traderpro.app"
         minSdk 24
@@ -24,7 +24,8 @@ android {
             signingConfig signingConfigs.persistentKey
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources false
             signingConfig signingConfigs.persistentKey
         }
     }
