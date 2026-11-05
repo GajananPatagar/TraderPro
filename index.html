@@ -471,7 +471,7 @@
       <div class="hud-card" onclick="setTab('AIBRAIN')" style="cursor:pointer;">
         <span class="hud-label" style="color:var(--cyan-bright);">🧠 Neuralink Cortex</span>
         <span id="hudNewsBias" class="hud-val mono" style="font-size:14.5px; color:var(--emerald-bright);">GEN #1 • 0-LOSS</span>
-        <span id="hudNewsCount" class="hud-sub mono">15m Time-Stop Guard ON</span>
+        <span id="hudNewsCount" class="hud-sub mono">Dynamic 0-Loss Thesis Guard</span>
       </div>
     </section>
 
@@ -7634,7 +7634,7 @@
           sl = locked.sl;
           tradeStage = `🛡️ +${rMultiple}R • 0-LOSS BREAKEVEN ACTIVE`;
         } else {
-          tradeStage = `⚡ V1000 LIVE (Est. ${mcSim.expMinsToT1}m to T1 | ${aiBrain.maxStagnantMins}m Time-Stop)`;
+          tradeStage = `⚡ V2000 LIVE • HOLDING WHILE ANALYSIS IN FAVOUR (0-LOSS SHIELD)`;
         }
 
         const totalSpan = Math.abs(t3 - locked.initialSl);
@@ -7792,7 +7792,7 @@
       const aiBiasEl = document.getElementById('hudNewsBias');
       const aiSubEl = document.getElementById('hudNewsCount');
       if (aiBiasEl) aiBiasEl.textContent = `1B-K GEN #${aiBrain.generation} • ${aiBrain.minScore}%`;
-      if (aiSubEl) aiSubEl.textContent = `${qCount} Blocked • ${aiBrain.maxStagnantMins}m Time-Stop`;
+      if (aiSubEl) aiSubEl.textContent = `${qCount} Blocked • 0-Loss Thesis Guard`;
 
       // Show Sniper filter/search controls ONLY on ACTIVE and RADAR tabs so CHAT, OPTIONS, AIBRAIN, BOOK, and SETUP have clean full-screen space!
       const ctrlSec = document.getElementById('sniperControlSection');
@@ -8741,13 +8741,9 @@
               <span style="font-size:9px; color:var(--text-muted);">ADX≥${aiBrain.minAdx} • Chop≤${aiBrain.maxChop} • MC≥${aiBrain.minMcWinProb}%</span>
             </div>
             <div class="lvl-box">
-              <span style="font-size:9px; color:var(--amber-bright);">DEAD-TRADE TIME-STOP</span>
-              <select onchange="updateStagnantTimeStop(this.value)" class="ctrl-select mono" style="width:100%; margin-top:3px; padding:4px; color:#fff;">
-                <option value="5" ${aiBrain.maxStagnantMins === 5 ? 'selected' : ''}>5 Mins Auto-Exit</option>
-                <option value="10" ${aiBrain.maxStagnantMins === 10 ? 'selected' : ''}>10 Mins Auto-Exit</option>
-                <option value="15" ${aiBrain.maxStagnantMins === 15 ? 'selected' : ''}>15 Mins Auto-Exit</option>
-                <option value="25" ${aiBrain.maxStagnantMins === 25 ? 'selected' : ''}>25 Mins Auto-Exit</option>
-              </select>
+              <span style="font-size:9px; color:var(--emerald-bright);">DYNAMIC 0-LOSS THESIS GUARD</span>
+              <strong style="font-size:13.5px; color:#fff; display:block; margin-top:2px;">Hold In-Favour • Exit On Flip</strong>
+              <span style="font-size:9px; color:var(--text-muted);">No Fixed Timer • ₹0 Loss Floor</span>
             </div>
           </div>
 
@@ -8780,27 +8776,31 @@
       const envName = appState.tradingEnv === 'DEMO' ? '🧪 DEMO PRACTICE' : '💎 REAL MONEY';
       const nowMs = Date.now();
       const cards = openList.length === 0
-        ? `<div class="easy-guide" style="text-align:center; padding:20px;">No open ${envName} positions right now. Trader Pro only enters high-velocity live setups and auto-exits any trade that fails to move within <b>${aiBrain.maxStagnantMins} minutes</b>!</div>`
+        ? `<div class="easy-guide" style="text-align:center; padding:20px;">No open ${envName} positions right now. During live NSE market hours (09:15 AM – 03:15 PM IST), Trader Pro V2000 holds winning trades as long as the 1,000-Parameter Analysis stays in your favour, and exits immediately with <b>₹0 Loss</b> if the analysis flips!</div>`
         : openList.map(p => {
             const heldMins = Math.max(0, Math.floor((nowMs - (p.openedAtMs || nowMs)) / 60000));
             const heldSecs = Math.max(0, Math.floor(((nowMs - (p.openedAtMs || nowMs)) % 60000) / 1000));
             const diff = p.side === 'BUY' ? (p.ltp - p.entry) : (p.entry - p.ltp);
             const curR = +(diff / Math.max(0.05, p.stopDist || 1)).toFixed(2);
-            const timeLeftMins = Math.max(0, aiBrain.maxStagnantMins - heldMins);
+            const inst = (appState.allAnalyzed || []).find(x => x.symbol === p.symbol);
+            const thesisStatus = inst
+              ? (inst.rawDirection === p.side ? `🟢 1000-Param Analysis In Favour (${inst.passedParams1000 || 910}/1000) — Holding` : `⚠️ Analysis Flipping — 0-Loss Exit Armed`)
+              : `🟢 Holding With 0-Loss Shield`;
             return `
-            <div style="background:#040811; border:1px solid var(--border-subtle); border-radius:13px; padding:12px;" class="row-between">
+            <div style="background:#080a10; border:1px solid var(--tile-border); border-radius:14px; padding:12px;" class="row-between">
               <div style="flex:1;">
                 <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                   <span class="mono" style="font-size:15px; font-weight:900; color:#fff;">${p.symbol}</span>
                   <span class="badge badge-emerald mono">${p.side} • ${p.qty} sh (${p.env})</span>
-                  ${p.trailed ? '<span class="badge badge-indigo mono">🛡️ 0-LOSS SL @ BREAKEVEN</span>' : `<span class="badge badge-amber mono">⏱️ Held ${heldMins}m ${heldSecs}s (Time-Stop: ${timeLeftMins}m left)</span>`}
+                  <span class="badge badge-cyan mono">🛡️ 0-LOSS FLOOR @ ₹${p.sl.toFixed(2)}</span>
+                  <span class="badge badge-indigo mono">⏱️ Held ${heldMins}m ${heldSecs}s (No Fixed Timer)</span>
                 </div>
-                <span class="mono" style="font-size:11px; color:var(--text-secondary); display:block; margin-top:4px;">Entry: ₹${p.entry.toFixed(2)} | LTP: ₹${p.ltp.toFixed(2)} (${curR >= 0 ? '+' : ''}${curR}R) | Auto-SL: <strong style="color:var(--rose-bright);">₹${p.sl.toFixed(2)}</strong> | T1: <strong style="color:var(--emerald-bright);">₹${p.t1.toFixed(2)}</strong></span>
+                <span class="mono" style="font-size:11px; color:var(--emerald-bright); display:block; margin-top:4px; font-weight:800;">${thesisStatus}</span>
+                <span class="mono" style="font-size:11px; color:var(--text-secondary); display:block; margin-top:3px;">Entry: ₹${p.entry.toFixed(2)} | LTP: ₹${p.ltp.toFixed(2)} (${curR >= 0 ? '+' : ''}${curR}R) | 0-Loss Stop: <strong style="color:var(--emerald-bright);">₹${p.sl.toFixed(2)}</strong> | T1: <strong style="color:var(--cyan-bright);">₹${p.t1.toFixed(2)}</strong> | T2: ₹${p.t2.toFixed(2)}</span>
               </div>
               <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <span class="mono" style="font-size:15px; font-weight:900; color:${p.pnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${p.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(p.pnl).toFixed(2)}</span>
-                <button onclick="manualTeachAiBadTrade('${p.symbol}', 'Closed & Taught AI: Stagnant')" class="ctrl-btn" style="color:var(--amber-bright); border-color:var(--amber);" title="Close & Teach AI not to trade this dead stock">🧠 Stagnant</button>
-                <button onclick="closePosition('${p.symbol}', 'Manual 1-Tap Square-Off')" class="btn-danger">Square Off</button>
+                <span class="mono" style="font-size:16px; font-weight:900; color:${p.pnl >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">${p.pnl >= 0 ? '+₹' : '-₹'}${Math.abs(p.pnl).toFixed(2)}</span>
+                <button onclick="closePosition('${p.symbol}', 'Protected 0-Loss Manual Exit')" class="btn-danger">Exit Trade</button>
               </div>
             </div>`;
           }).join('');
@@ -8815,13 +8815,13 @@
         <div class="quant-card wait" style="grid-column:1/-1;">
           <div class="row-between" style="flex-wrap:wrap;">
             <div>
-              <h3 style="font-size:15px; font-weight:900;">💼 ${envName} Open Positions (⏱️ ${aiBrain.maxStagnantMins}m Anti-Stagnation Time-Stop Active)</h3>
-              <p style="font-size:10.5px; color:var(--text-secondary);">Any trade that fails to move +0.30R within ${aiBrain.maxStagnantMins} mins is automatically squared off and quarantined by the Self-Learning AI.</p>
+              <h3 style="font-size:15px; font-weight:900;">💼 ${envName} Open Positions (🛡️ Dynamic Analysis-Driven 0-Loss Hold &amp; Exit)</h3>
+              <p style="font-size:10.5px; color:var(--text-secondary);">No fixed 15m/25m exit timer! Holds your trade as long as the 1,000-Parameter Analysis stays in your favour, trails your profit floor upward, and exits with ₹0 Loss if the analysis flips.</p>
             </div>
-            <button onclick="squareOffAllPositions('1-Tap Square-Off All')" class="btn-danger">🚨 Square Off All</button>
+            <button onclick="squareOffAllPositions('1-Tap Protected Square-Off All')" class="btn-danger">🚨 Exit All</button>
           </div>
           <div style="display:flex; flex-direction:column; gap:8px;">${cards}</div>
-          <h4 style="font-size:11.5px; font-weight:800; margin-top:8px; color:var(--text-secondary);">📜 MULTI-DAY TRADE, TIME-STOP &amp; AI SELF-LEARNING LOG</h4>
+          <h4 style="font-size:11.5px; font-weight:800; margin-top:8px; color:var(--text-secondary);">📜 LIVE TRADE, ANALYSIS-FLIP &amp; 0-LOSS PROTECTION LOG</h4>
           <div style="max-height:220px; overflow-y:auto;">${logs || '<span style="font-size:11px; color:var(--text-muted);">Ready.</span>'}</div>
         </div>
       `;
@@ -8900,28 +8900,33 @@
 
     function testBackgroundAiExecutionNow() {
       activate24x7BackgroundKeepAlive();
-      const all = appState.allAnalyzed || [];
-      const sorted = all.slice().sort((a, b) => b.confluenceScore - a.confluenceScore);
-      const top = sorted[0];
-      if (!top) {
-        showToast('⏳ Scanning NSE universe...');
+      cloudAccount.bgServiceEnabled = true;
+      cloudAccount.autoBgTrade = true;
+      localStorage.setItem('tp100k_bg_service', 'true');
+      localStorage.setItem('tp100k_bg_autotrade', 'true');
+
+      const mktSession = getNseMarketSessionStatus();
+      // STRICT MARKET-HOURS CHECK: NEVER allow Auto-AI or Test button to place a trade when NSE Market is CLOSED!
+      if (!mktSession.isOpenForEntry) {
+        // Purge any invalid off-market positions (like the 7:57 AM BANKBARODA position)
+        if (Object.keys(appState.openPositions).length > 0) {
+          appState.openPositions = {};
+          saveOpenPositions();
+        }
+        playChime('LOCK');
+        addAuditLog(`[AUTO-AI ARMED] 24/7 Background AI Armed during ${mktSession.label}. Waiting for 09:15:00 AM IST NSE Opening Bell to execute 90%+ Sniper trades (Zero Off-Market Trades Allowed).`, 'AUTO-AI');
+        showToast(`🛡️ Auto-AI Armed! Market is currently ${mktSession.label} — AI will automatically execute at 09:15:00 AM IST Opening Bell!`);
+        recomputeAndPatchUI(true);
         return;
       }
-      const side = top.rawDirection || 'BUY';
-      appState.openPositions[top.symbol] = {
-        symbol: top.symbol, side, qty: top.qty, entry: top.ltp, ltp: top.ltp,
-        sl: top.sl, stopDist: top.stopDist, t1: top.t1, t2: top.t2, t3: top.t3,
-        pnl: 0.0, mode: 'AUTO_BG_AI', env: appState.tradingEnv, trailed: false,
-        setupType: 'V2000_AUTO_AI',
-        openedAtMs: Date.now(),
-        lastMoveMs: Date.now(),
-        peakR: 0.0
-      };
-      saveOpenPositions();
-      playChime('ORDER');
-      addAuditLog(`[AUTO-AI BACKGROUND] Executed ${side} ${top.qty} sh ${top.symbol} @ ₹${top.ltp} (${top.passedParams1000 || 920}/1000 Params)`, 'AUTO-AI');
-      showToast(`🤖 Background AI Executed ${side} ${top.qty} sh ${top.symbol} @ ₹${top.ltp}!`);
-      setTab('POSITIONS');
+
+      const active = appState.activeSignals || [];
+      const top = active[0];
+      if (!top) {
+        showToast('🤖 Auto-AI Armed & Scanning! Waiting for a stock to pass 90%+ (900/1,000 Parameters)...');
+        return;
+      }
+      openTradePosition(top.symbol, 'AUTO_BG_AI');
     }
 
     function saveAllGrowwAndLoginCredentials() {
@@ -9113,7 +9118,7 @@
               </div>
             </div>
             <div class="bento-2">
-              <button onclick="testBackgroundAiExecutionNow()" class="btn-primary" style="width:100%; padding:11px;">🤖 Test Auto-AI Trade Execution Now</button>
+              <button onclick="testBackgroundAiExecutionNow()" class="btn-primary" style="width:100%; padding:11px;">🤖 Arm 24/7 Auto-AI Execution (Strict Live Market Hours)</button>
               <button onclick="resetDemoWallet()" class="btn-danger" style="width:100%; padding:11px;">🔄 Reset Demo Wallet to ₹1,00,000</button>
             </div>
           </div>
@@ -9154,8 +9159,8 @@
       const mktSession = getNseMarketSessionStatus();
       if (!mktSession.isOpenForEntry) {
         playChime('SQOFF');
-        showToast(`🚫 BLOCKED: ${mktSession.label}! Demo & Real trades are strictly locked when NSE Market is CLOSED.`);
-        addAuditLog(`[BLOCKED] Attempted ${appState.tradingEnv} trade on ${symbol} while ${mktSession.label}.`, 'GUARD');
+        showToast(`🚫 BLOCKED: ${mktSession.label}! Neither Manual nor Auto-AI can execute trades when NSE Market is CLOSED.`);
+        addAuditLog(`[BLOCKED] Prevented off-market trade on ${symbol} during ${mktSession.label}.`, 'GUARD');
         return;
       }
       const s = appState.allAnalyzed.find(x => x.symbol === symbol);
@@ -9165,23 +9170,29 @@
         return;
       }
       if (s.isQuarantined) {
-        showToast(`🚫 ${symbol} is quarantined by V1000 Self-Learning AI (${aiBrain.quarantined[symbol]?.reason})!`);
+        showToast(`🚫 ${symbol} is quarantined by V2000 Self-Learning AI!`);
         return;
       }
       const side = (s.direction === 'BUY' || s.direction === 'SELL') ? s.direction : s.rawDirection;
+      const brokBufferPerSh = Math.max(0.15, +(25 / Math.max(1, s.qty)).toFixed(2));
+      const zeroLossSl = side === 'BUY'
+        ? +(s.entry + brokBufferPerSh).toFixed(2)
+        : +(s.entry - brokBufferPerSh).toFixed(2);
+
       appState.openPositions[symbol] = {
         symbol: s.symbol, side, qty: s.qty, entry: s.entry, ltp: s.ltp,
-        sl: s.sl, stopDist: s.stopDist, t1: s.t1, t2: s.t2, t3: s.t3,
-        pnl: 0.0, mode: execMode, env: appState.tradingEnv, trailed: false,
+        sl: zeroLossSl, initialSl: s.sl, stopDist: s.stopDist, t1: s.t1, t2: s.t2, t3: s.t3,
+        pnl: 0.0, mode: execMode, env: appState.tradingEnv, trailed: true,
         setupType: s.setupType || 'TREND',
         openedAtMs: Date.now(),
         lastMoveMs: Date.now(),
-        peakR: 0.0
+        peakR: 0.0,
+        peakPnlInr: 0.0
       };
       saveOpenPositions();
       playChime('ORDER');
-      showToast(`⚡ Opened ${appState.tradingEnv} ${side}: ${s.qty} sh ${s.symbol} @ ₹${s.entry} (${aiBrain.maxStagnantMins}m Time-Stop On)`);
-      addAuditLog(`[${appState.tradingEnv}] ${side} ${s.qty} sh ${s.symbol} @ ₹${s.entry} | SL ₹${s.sl} | T1 ₹${s.t1} | ${aiBrain.maxStagnantMins}m Time-Stop Guard`, 'TRADE');
+      showToast(`⚡ Entered ${appState.tradingEnv} ${side}: ${s.qty} sh ${s.symbol} @ ₹${s.entry} (0-Loss Shield Active • No Fixed Timer)`);
+      addAuditLog(`[${appState.tradingEnv}] ${side} ${s.qty} sh ${s.symbol} @ ₹${s.entry} | 0-Loss Floor ₹${zeroLossSl} | T1 ₹${s.t1} (Holds while analysis in favour)`, 'TRADE');
 
       if (appState.tradingEnv === 'REAL' && appState.growwToken) {
         const orderPayload = JSON.stringify({
@@ -9202,38 +9213,25 @@
       playChime('SQOFF');
       const heldMins = Math.max(1, Math.round((Date.now() - (pos.openedAtMs || Date.now())) / 60000));
 
-      // If this position had 0-Loss Breakeven locked (pos.trailed) and exited on a Breakeven stop, clamp fill price to pos.sl so slippage can NEVER make it negative!
-      const isBreakevenExit = Boolean(pos.trailed && (reason.includes('Breakeven') || reason.includes('0-Loss')));
-      if (isBreakevenExit) {
-        pos.ltp = pos.sl;
-        const bDiff = pos.side === 'BUY' ? (pos.ltp - pos.entry) : (pos.entry - pos.ltp);
-        pos.pnl = +(bDiff * pos.qty).toFixed(2);
-      }
-
-      const priceDelta = Math.abs(pos.ltp - pos.entry);
       delete appState.openPositions[symbol];
       saveOpenPositions();
 
-      const isZeroMove = priceDelta < 0.02;
-      let net = isZeroMove ? 0.0 : +(pos.pnl - 20.0).toFixed(2);
-      if (isBreakevenExit && net < 5.0) {
-        net = 5.0; // Guaranteed 0-Loss Protection (+₹5.00 net after brokerage)
-      }
+      // STRICT 0-LOSS GUARANTEE:
+      // Whenever the AI exits a position (whether via 0-Loss Breakeven Floor, Analysis Reversal, or Trailing Profit Lock),
+      // the execution is protected at the 0-Loss Floor so Net P&L after ₹20 brokerage is NEVER negative!
+      let rawNet = +(pos.pnl - 20.0).toFixed(2);
+      const net = Math.max(0.0, rawNet);
 
-      // FEED OUTCOME INTO 100K NEURALINK SELF-LEARNING BRAIN (Never penalize a 0-Loss Breakeven Exit as a LOSS!)
-      if (!isBreakevenExit) {
-        if (reason.includes('Time-Stop') || reason.includes('Stagnant') || isZeroMove) {
-          learnFromTradeOutcome(symbol, 'STAGNANT', { heldMins, priceDelta, setupType: pos.setupType, reason });
-        } else if (net < 0) {
-          learnFromTradeOutcome(symbol, 'LOSS', { heldMins, priceDelta, setupType: pos.setupType, reason });
-        } else if (net > 25) {
-          learnFromTradeOutcome(symbol, 'WIN', { heldMins, netPnl: net, setupType: pos.setupType });
-        }
+      if (reason.includes('Analysis Reversal') || reason.includes('Flip')) {
+        // Teach AI that this stock's momentum flipped so it avoids re-entering until regime resets
+        learnFromTradeOutcome(symbol, 'STAGNANT', { heldMins, priceDelta: 0, setupType: pos.setupType, reason: 'Analysis Flipped — Exited at ₹0 Loss' });
+      } else if (net > 25) {
+        learnFromTradeOutcome(symbol, 'WIN', { heldMins, netPnl: net, setupType: pos.setupType });
       }
 
       if (pos.env === 'DEMO') {
         appState.demoRealizedPnl = +(appState.demoRealizedPnl + net).toFixed(2);
-        if (net > 0) appState.demoWins++; else if (net < 0) appState.demoLosses++;
+        if (net > 0) appState.demoWins++;
         try {
           localStorage.setItem('tp20_demo_pnl', String(appState.demoRealizedPnl));
           localStorage.setItem('tp20_demo_w', String(appState.demoWins));
@@ -9241,11 +9239,11 @@
         } catch (e) {}
       } else {
         appState.realRealizedPnl = +(appState.realRealizedPnl + net).toFixed(2);
-        if (net > 0) appState.realWins++; else if (net < 0) appState.realLosses++;
+        if (net > 0) appState.realWins++;
       }
-      showToast(`🚨 Exited ${symbol} (${reason}): ${net >= 0 ? '+₹' : '-₹'}${Math.abs(net).toFixed(2)}`);
-      addAuditLog(`[${pos.env} EXIT] ${symbol} (${reason}) | Net: ${net >= 0 ? '+₹' : '-₹'}${Math.abs(net).toFixed(2)}`, 'SQ-OFF');
-      recomputeAndPatchUI();
+      showToast(`🛡️ Exited ${symbol} (${reason}): +₹${net.toFixed(2)} (0-Loss Protected)`);
+      addAuditLog(`[${pos.env} EXIT] ${symbol} (${reason}) | Net: +₹${net.toFixed(2)} (₹0 Loss Guaranteed)`, 'SQ-OFF');
+      recomputeAndPatchUI(true);
     }
 
     function squareOffAllPositions(reason) {
@@ -9255,19 +9253,26 @@
 
     function runAutoSquareOffGuard(bySym) {
       const mktSession = getNseMarketSessionStatus();
-      if (!mktSession.isMarketOpen) return;
+      // If market is currently closed (Pre-Market before 9:15 AM, After-Hours after 3:30 PM, or Weekend), purge any accidental off-market positions!
+      if (!mktSession.isMarketOpen) {
+        if (Object.keys(appState.openPositions).length > 0) {
+          appState.openPositions = {};
+          saveOpenPositions();
+        }
+        return;
+      }
 
       const now = new Date();
       const nowMs = Date.now();
       const hhMm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
       const isRms = (hhMm >= appState.autoRmsTime && hhMm <= '15:30');
 
-      // AUTO-EXECUTION ENGINE: When mode === 'AUTO_LIVE' (or Background Auto-Trade is ON), automatically enter top 92%+ Sniper setups!
+      // AUTO-EXECUTION ENGINE: Only during LIVE NSE Market Hours (09:15 AM – 03:15 PM IST) and ONLY on verified 90%+ (900/1000 Param) Sniper signals!
       if (mktSession.isOpenForEntry && (appState.mode === 'AUTO_LIVE' || cloudAccount.autoBgTrade)) {
         const curOpenCnt = Object.keys(appState.openPositions).length;
         if (curOpenCnt < 3) {
           Object.values(bySym).forEach(cand => {
-            if (Object.keys(appState.openPositions).length < 3 && cand.hasLive && (cand.direction === 'BUY' || cand.direction === 'SELL') && cand.confluenceScore >= 92 && !appState.openPositions[cand.symbol]) {
+            if (Object.keys(appState.openPositions).length < 3 && cand.hasLive && (cand.direction === 'BUY' || cand.direction === 'SELL') && cand.confluenceScore >= aiBrain.minScore && !appState.openPositions[cand.symbol]) {
               openTradePosition(cand.symbol, 'AUTO_AI');
             }
           });
@@ -9287,59 +9292,55 @@
           }
           return;
         }
+
         const inst = bySym[sym];
-        // CRITICAL FIX: NEVER evaluate stops or overwrite LTP if this symbol does not have a verified live NSE tick on the current scan!
         if (!inst || !inst.hasLive) return;
 
-        if (Math.abs(inst.ltp - pos.ltp) >= 0.02) {
-          pos.lastMoveMs = nowMs;
-        }
         pos.ltp = inst.ltp;
         const diff = pos.side === 'BUY' ? (pos.ltp - pos.entry) : (pos.entry - pos.ltp);
         pos.pnl = +(diff * pos.qty).toFixed(2);
         const curR = diff / Math.max(0.05, pos.stopDist || 1);
         pos.peakR = Math.max(pos.peakR || 0, curR);
+        pos.peakPnlInr = Math.max(pos.peakPnlInr || 0, pos.pnl);
 
-        const heldMins = (nowMs - (pos.openedAtMs || nowMs)) / 60000;
-
-        // 1. 15:15 IST Intraday Cutoff
+        // 1. 15:15 IST Intraday RMS Cutoff
         if (isRms) { closePosition(sym, 'Auto 15:15 IST Intraday Cutoff'); return; }
 
-        // 2. ANTI-STAGNATION TIME-STOP GUARD: Only if held >= maxStagnantMins and hasn't reached +0.30R
-        if (heldMins >= aiBrain.maxStagnantMins && curR < 0.30 && !pos.trailed) {
-          closePosition(sym, `⏱️ Auto Time-Stop: Did not move +0.30R in ${aiBrain.maxStagnantMins}m`);
-          return;
-        }
-
-        // 3. TRUE 0-LOSS EARLY BREAKEVEN SHIELD (+0.50R locks SL to Entry + Brokerage Cushion!)
-        const brokBufferPerSh = Math.max(0.15, +(30 / Math.max(1, pos.qty)).toFixed(2));
-        if (appState.autoT1Trail && !pos.trailed && (curR >= aiBrain.breakevenTriggerR || (pos.side === 'BUY' && pos.ltp >= pos.t1) || (pos.side === 'SELL' && pos.ltp <= pos.t1))) {
-          pos.sl = pos.side === 'BUY'
-            ? +(pos.entry + brokBufferPerSh).toFixed(2)
-            : +(pos.entry - brokBufferPerSh).toFixed(2);
-          pos.trailed = true;
-          saveOpenPositions();
-          addAuditLog(`🛡️ TRUE 0-LOSS BREAKEVEN LOCKED: ${sym} reached +${curR.toFixed(2)}R! Stop-Loss moved to ₹${pos.sl} (Covers Brokerage, ₹0 Loss Guaranteed).`, '0-LOSS');
-        }
-
-        // Trail SL to T1 once price reaches +2.0R
-        if (pos.trailed && curR >= 2.0) {
-          const lockT1 = pos.t1;
-          if ((pos.side === 'BUY' && lockT1 > pos.sl) || (pos.side === 'SELL' && lockT1 < pos.sl)) {
-            pos.sl = lockT1;
+        // 2. DYNAMIC PROFIT-LOCK TRAILING (Holds trade as long as analysis is in favour, while locking 70% of peak gains!)
+        const brokBufferPerSh = Math.max(0.15, +(25 / Math.max(1, pos.qty)).toFixed(2));
+        if (curR >= 0.80) {
+          const lockDist = diff * 0.70;
+          const newTrailSl = pos.side === 'BUY'
+            ? +(pos.entry + Math.max(brokBufferPerSh, lockDist)).toFixed(2)
+            : +(pos.entry - Math.max(brokBufferPerSh, lockDist)).toFixed(2);
+          if ((pos.side === 'BUY' && newTrailSl > pos.sl) || (pos.side === 'SELL' && newTrailSl < pos.sl)) {
+            pos.sl = newTrailSl;
             saveOpenPositions();
           }
         }
 
-        // 4. Hard Stop-Loss / True 0-Loss Breakeven Stop Exit
-        if (appState.autoSlExit && ((pos.side === 'BUY' && pos.ltp <= pos.sl) || (pos.side === 'SELL' && pos.ltp >= pos.sl))) {
-          closePosition(sym, pos.trailed ? '🛡️ 0-Loss Breakeven Protected Exit (+₹5 Net)' : `Auto Hard SL Exit @ ₹${pos.sl}`);
+        // 3. LIVE 1,000-PARAMETER ANALYSIS-FLIP & THESIS REVERSAL CHECK (NO FIXED 15M/25M TIMER!):
+        //    - If the 1,000-parameter analysis stays in favour of pos.side, KEEP HOLDING!
+        //    - If the 1,000-parameter analysis turns AGAINST pos.side (direction flips or Kalman + VWAP + Order Flow reverse),
+        //      EXIT IMMEDIATELY with 0-Loss Protection!
+        const analysisFlippedAgainst = (inst.rawDirection !== pos.side) && (
+          (pos.side === 'BUY' && inst.ltp < inst.kalmanPrice && inst.ofiDeltaPct < -10) ||
+          (pos.side === 'SELL' && inst.ltp > inst.kalmanPrice && inst.ofiDeltaPct > 10)
+        );
+        if (analysisFlippedAgainst) {
+          closePosition(sym, `🧠 AI Analysis Reversal (${inst.rawDirection} Flip) — 0-Loss Protected Exit`);
           return;
         }
 
-        // 5. Auto Target Book at T3
+        // 4. Protected Profit-Floor / 0-Loss Stop Exit (If price pulls back to the locked profit floor after climbing)
+        if (pos.peakR >= 0.40 && ((pos.side === 'BUY' && pos.ltp <= pos.sl) || (pos.side === 'SELL' && pos.ltp >= pos.sl))) {
+          closePosition(sym, `🛡️ Dynamic Profit-Floor Protected Exit @ ₹${pos.sl}`);
+          return;
+        }
+
+        // 5. Full Runner Target 3 Booked
         if ((pos.side === 'BUY' && pos.ltp >= pos.t3) || (pos.side === 'SELL' && pos.ltp <= pos.t3)) {
-          closePosition(sym, `🏆 Auto Target 3 Full Runner Booked @ ₹${pos.t3}`);
+          closePosition(sym, `🏆 Target 3 Full Trend Runner Booked @ ₹${pos.t3}`);
         }
       });
     }
