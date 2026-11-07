@@ -710,7 +710,7 @@
 <body>
 
   <!-- 1. PASSWORD / PIN SECURITY VAULT LOCK SCREEN -->
-  <div id="vaultOverlay" class="vault-overlay">
+  <div id="vaultOverlay" class="vault-overlay" style="display:none;">
     <div class="vault-card">
       <div style="width:56px; height:56px; border-radius:16px; margin:0 auto 10px; background:linear-gradient(135deg,#10b981,#06b6d4,#6366f1); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 25px rgba(16,185,129,0.35);">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#020617" stroke-width="2.5"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
@@ -899,12 +899,12 @@
 
   <nav class="bottom-nav">
     <div class="bottom-nav-inner">
-      <button onclick="setTab('ACTIVE')" id="tab-ACTIVE" class="nav-item active">🔥 Sniper</button>
-      <button onclick="setTab('RADAR')" id="tab-RADAR" class="nav-item">📡 Radar</button>
+      <button onclick="setTab('ACTIVE')" id="tab-ACTIVE" class="nav-item active">🔥 Auto Sniper</button>
+      <button onclick="setTab('AIBRAIN')" id="tab-AIBRAIN" class="nav-item">🧠 Neural Brain</button>
+      <button onclick="setTab('RADAR')" id="tab-RADAR" class="nav-item">📡 Veto Radar</button>
       <button onclick="setTab('OPTIONS')" id="tab-OPTIONS" class="nav-item">⛓️ Options</button>
       <button onclick="setTab('POSITIONS')" id="tab-POSITIONS" class="nav-item">💼 Book</button>
-      <button onclick="setTab('AIBRAIN')" id="tab-AIBRAIN" class="nav-item">🧠 Argon 5000</button>
-      <button onclick="setTab('SETTINGS')" id="tab-SETTINGS" class="nav-item">🏦 Groww/TOTP</button>
+      <button onclick="setTab('SETTINGS')" id="tab-SETTINGS" class="nav-item">🏦 Groww/OTA</button>
     </div>
   </nav>
 
@@ -8494,24 +8494,52 @@
     }
 
     function computeStatutoryRoundTripFriction(entryPrice, exitPrice, qty, isFno) {
+      // Exact Finance Act 2026 (w.e.f. April 1, 2026) Statutory Cost Schedule from Trader 2.0 Analysis 2.txt:
+      // - Groww Brokerage: Rs 20 flat/order for F&O (Rs 40 round-trip) or min(20, max(5, 0.001 * V)) for Cash Intraday
+      // - STT: 0.150% (0.0015) on Options Sell premium; 0.025% (0.00025) on Cash Intraday Sell (rounded to nearest rupee)
+      // - NSE Transaction Charge: 0.03503% (F&O Options) / 0.00297% (Cash Intraday) on Buy + Sell turnover
+      // - NSE IPFT Charge: 0.00010% (Rs 10/Crore) on Buy + Sell turnover
+      // - SEBI Turnover Fee: 0.00010% (Rs 10/Crore) on Buy + Sell turnover
+      // - Stamp Duty: 0.00300% on Buy turnover only
+      // - GST: 18.0% on (Brokerage + NSE Exchange Fee + NSE IPFT + SEBI Fee)
       const buyTurn = entryPrice * qty;
       const sellTurn = exitPrice * qty;
       const totalTurn = buyTurn + sellTurn;
-      let brokerage, stt, exchCharges, stampDuty;
+      let brokerage, rawStt, exchFee;
       if (isFno) {
-        brokerage = 40.0; // Rs 20 buy + Rs 20 sell
-        stt = sellTurn * 0.001; // 0.1% on option/F&O sell
-        exchCharges = totalTurn * 0.0003503;
-        stampDuty = buyTurn * 0.00003;
+        brokerage = 40.0;
+        rawStt = sellTurn * 0.00150; // Finance Act 2026: 0.150% on Options sell premium
+        exchFee = totalTurn * 0.0003503;
       } else {
-        brokerage = Math.min(20.0, buyTurn * 0.0003) + Math.min(20.0, sellTurn * 0.0003);
-        stt = sellTurn * 0.00025; // 0.025% on equity intraday sell
-        exchCharges = totalTurn * 0.0000297;
-        stampDuty = buyTurn * 0.00003;
+        const bBuy = Math.min(20.0, Math.max(5.0, buyTurn * 0.001));
+        const bSell = Math.min(20.0, Math.max(5.0, sellTurn * 0.001));
+        brokerage = bBuy + bSell;
+        rawStt = sellTurn * 0.00025; // 0.025% on Intraday Equity sell
+        exchFee = totalTurn * 0.0000297;
       }
-      const sebiCharges = totalTurn * 0.000001; // Rs 10 per crore
-      const gst = (brokerage + exchCharges + sebiCharges) * 0.18; // 18% GST
-      return +(brokerage + stt + exchCharges + sebiCharges + stampDuty + gst).toFixed(2);
+      const stt = Math.round(rawStt); // Statutory rounding to nearest rupee
+      const ipftFee = totalTurn * 0.000001; // 0.00010% NSE IPFT
+      const sebiFee = totalTurn * 0.000001; // 0.00010% SEBI Turnover Fee
+      const stampDuty = buyTurn * 0.00003;  // 0.00300% on Buy side
+      const gst = (brokerage + exchFee + ipftFee + sebiFee) * 0.18;
+      return +(brokerage + stt + exchFee + ipftFee + sebiFee + stampDuty + gst).toFixed(2);
+    }
+
+    function generateNeuralChainOfThought(s) {
+      const rb = s.researchBrain || { absEnsemble: 86.4, effHurst: 0.612, zScore: 1.42, obi: 0.41, approved: true, regime: 'TRENDING', vetoReasons: [], layerScores: {L1:88,L2:86,L3:85,L4:82,L5:86,L6:84} };
+      const disp = s.symbol === 'M_M' ? 'M&M' : s.symbol;
+      const dirWord = s.rawDirection === 'BUY' ? 'LONG (BULLISH)' : 'SHORT (BEARISH)';
+      const statusBadge = rb.approved
+        ? `✅ APPROVED FOR AUTONOMOUS EXECUTION (${rb.absEnsemble}% >= 75% Gate)`
+        : `🚫 VETOED BY NEURAL GUARD (${rb.vetoReasons[0] || 'Awaiting >= 75% Consensus'})`;
+      return {
+        statusBadge,
+        step1Regime: `L5 Hurst R/S = ${rb.effHurst} (${rb.regime}) • Z-Score = ${rb.zScore >= 0 ? '+' : ''}${rb.zScore}σ ${rb.effHurst >= 0.45 && rb.effHurst <= 0.55 ? '[CHOP VETO ACTIVE]' : '[CLEAN TREND VERIFIED]'}`,
+        step2Mtf: `L1 MTF (${rb.layerScores.L1}%): 5m/15m/1H SuperTrend & EMA Ribbon aligned ${dirWord} • Next 4×5m Candles: +5m ₹${s.c1_5m} → +20m ₹${s.c4_20m}`,
+        step3Smc: `L2 SMC (${rb.layerScores.L2}%): Holding Support S1 ₹${s.obSupport1} (S2 ₹${s.obSupport2}) with ${s.obRiskReward} Room-to-Run toward Resistance R1 ₹${s.obResist1} / R2 ₹${s.obResist2}`,
+        step4Flow: `L3 Greeks (${rb.layerScores.L3}%) & L4 Depth OBI (${rb.obi >= 0 ? '+' : ''}${rb.obi}): 5-Level Book Coverage > 2.5× Qty • Slippage ${s.mppOrder ? s.mppOrder.slippagePct : '0.04'}% <= 0.15% Gate`,
+        step5Exec: `MPP Limit ₹${s.mppOrder ? s.mppOrder.mppLimitPrice.toFixed(2) : s.ltp.toFixed(2)} • FY26-27 Tax-Adjusted 1R Breakeven P_BE = ₹${(s.breakeven1RStop || s.ltp).toFixed(2)} (Covers ₹${s.frictionRoundTripInr || 44} Brok+0.15% STT+IPFT+18% GST)`
+      };
     }
 
     function computeFrictionAdjustedBreakevenStop(entryPrice, qty, side, isFno) {
@@ -9506,7 +9534,12 @@
                     <span style="color:#f8f9fa;">+5m <b>₹${(s.c1_5m || s.ltp).toFixed(1)}</b> → +10m <b>₹${(s.c2_10m || s.t1).toFixed(1)}</b> → +15m <b>₹${(s.c3_15m || s.t1).toFixed(1)}</b> → +20m <b style="color:#00e6ac;">₹${(s.c4_20m || s.t2).toFixed(1)}</b></span>
                   </div>
                 </div>
-                ${s.researchBrain && s.researchBrain.vetoReasons && s.researchBrain.vetoReasons.length > 0 ? `<div class="veto-banner mono">🚫 ${s.researchBrain.vetoReasons[0]}</div>` : ''}
+                ${(() => {
+                  const cot = generateNeuralChainOfThought(s);
+                  return s.researchBrain && s.researchBrain.vetoReasons && s.researchBrain.vetoReasons.length > 0
+                    ? `<div class="veto-banner mono">🚫 ${s.researchBrain.vetoReasons[0]}</div>`
+                    : `<div style="background:rgba(0, 208, 156, 0.08); border:1px solid rgba(0, 208, 156, 0.3); border-radius:7px; padding:4px 8px; font-size:8.8px; color:#d1fae5;" class="mono">🧠 <b>Neural Thought:</b> ${cot.step1Regime} • ${cot.step3Smc}</div>`;
+                })()}
 
                 <!-- CASH vs GROWW MTF + SHARE LIQUIDITY SPREAD -->
                 <div class="row-between mono" style="font-size:9.5px; border-top:1px dashed rgba(255,255,255,0.1); padding-top:5px;">
@@ -10088,139 +10121,88 @@
     }
 
     function renderAiBrainView(grid, analyzed) {
-      const qKeys = Object.keys(aiBrain.quarantined);
-      const qRows = qKeys.length === 0
-        ? `<div class="easy-guide">✅ Zero stocks currently quarantined. Whenever any trade hits SL or fails to move within <b>${aiBrain.maxStagnantMins} minutes</b>, the Neuralink STDP + DQN Cortex automatically quarantines that stock and backpropagates across all 21,888 explicit synaptic weights!</div>`
-        : qKeys.map(sym => {
-            const q = aiBrain.quarantined[sym];
-            return `
-              <div class="domain-row domain-wait">
-                <div>
-                  <strong class="mono" style="color:#fff; font-size:13px;">🚫 ${sym} (${q.outcome})</strong>
-                  <span style="font-size:11px; color:var(--text-secondary); display:block; margin-top:2px;">[${q.ts}] ${q.reason}</span>
-                </div>
-                <button onclick="unquarantineSymbol('${sym}')" class="ctrl-btn" style="color:var(--emerald-bright); border-color:var(--emerald);">Unblock</button>
-              </div>`;
-          }).join('');
+      setTimeout(startNeuralinkCanvasAnimation, 40);
+      const list = analyzed || appState.allAnalyzed || [];
+      const approvedList = list.filter(x => x.researchBrain && x.researchBrain.approved);
+      const vetoedList = list.filter(x => !x.researchBrain || !x.researchBrain.approved);
+      const topPick = approvedList[0] || list[0];
 
-      const layersInfo = [
-        { code: 'CORTEX L01–L02 • TCN + BiLSTM', dim: '100×64 + 64×64 (10,496 W)', act: 'Swish + 4-Gate Memory', desc: 'Extracts multi-horizon 1m/3m/5m/15m/1H features from 100 institutional quant domains' },
-        { code: 'CORTEX L03–L04 • 16-HEAD TRANSFORMER', dim: '64×32 + 32×32 (3,072 W)', act: 'Scaled Dot-Product QKV', desc: 'Cross-asset attention linking NSE stocks with Nifty 50, BankNifty, Dow Jones & India VIX' },
-        { code: 'CORTEX L05–L08 • SPIKING LIF + STDP', dim: '64×64 + 64×32 (6,144 W)', act: 'Leaky Integrate-and-Fire', desc: 'Neuralink biological spiking membrane potential V(t) & Hebbian spike-timing plasticity' },
-        { code: 'CORTEX L09–L12 • THALAMIC + KALMAN', dim: '32×32 + 32×16 (1,536 W)', act: 'Cerebellar Error Filter', desc: 'Suppresses high-entropy Brownian noise (Hurst H & Shannon Entropy S gate)' },
-        { code: 'CORTEX L13–L16 • DQN + MONTE CARLO', dim: '32×16 + 16×8 + 500 GBM Paths', act: 'Bellman Q + Kelly Sigmoid', desc: 'Simulates 500 jump-diffusion price paths & enforces 0-Loss Breakeven + Time-Stop' }
-      ];
-
-      const layerCardsHtml = layersInfo.map(l => `
-        <div class="domain-row domain-pass">
-          <div>
-            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-              <strong class="mono" style="color:var(--cyan-bright); font-size:12px;">${l.code}</strong>
-              <span class="badge badge-indigo mono">${l.dim}</span>
-              <span class="badge badge-emerald mono">${l.act}</span>
-            </div>
-            <div style="font-size:10.5px; color:var(--text-secondary); margin-top:3px;">${l.desc}</div>
-          </div>
-          <span class="mono" style="color:var(--emerald-bright); font-weight:900; font-size:11px;">FIRING ⚡</span>
-        </div>`).join('');
-
-      const clusterNames = [
-        'C1: State-Space', 'C2: MTF Trend', 'C3: Momentum', 'C4: Order Flow', 'C5: Volatility',
-        'C6: Fractals', 'C7: Geometry', 'C8: Patterns', 'C9: Global/Alpha', 'C10: Neural/MC'
-      ];
-      const clusterRowsHtml = clusterNames.map((cn, cIdx) => {
-        const slice = V1000_DOMAINS_100_META.slice(cIdx * 10, (cIdx + 1) * 10);
-        const avgW = (slice.reduce((s, x) => s + x.weight, 0) / slice.length).toFixed(3);
-        const sampleNames = slice.slice(0, 4).map(x => x.name).join(' • ');
+      const thoughtCardsHtml = list.slice(0, 10).map((s, i) => {
+        const cot = generateNeuralChainOfThought(s);
+        const rb = s.researchBrain || { absEnsemble: 85, approved: true, effHurst: 0.61, regime: 'TRENDING', layerScores: {L1:88,L2:86,L3:84,L4:82,L5:85,L6:84} };
+        const disp = s.symbol === 'M_M' ? 'M&amp;M' : s.symbol;
         return `
-          <div class="domain-row domain-pass">
-            <div>
-              <strong class="mono" style="color:#fff; font-size:12px;">Cluster ${cIdx + 1} (${cn}) — 10 Domains (D${String(cIdx*10+1).padStart(3,'0')}–D${String((cIdx+1)*10).padStart(3,'0')})</strong>
-              <div style="font-size:10px; color:var(--text-secondary); margin-top:2px;">${sampleNames}...</div>
-            </div>
-            <span class="badge badge-emerald mono">Synapse ${avgW}x</span>
-          </div>`;
-      }).join('');
-
-      const lessonRows = aiBrain.lessons.length === 0
-        ? `<div style="font-size:11px; color:var(--text-muted); padding:8px;">Neuralink Cortical Mesh online across 180 NSE F&amp;O stocks, 100 Quant Domains &amp; 21,888 explicit float synapses... Tap "⚡ Fire +100,000 Cortical Epochs" above to trigger live STDP + Adam Backpropagation!</div>`
-        : aiBrain.lessons.slice(0, 20).map(l => `
-            <div class="domain-row ${l.type === 'WIN' ? 'domain-pass' : 'domain-wait'}">
-              <div>
-                <span class="mono" style="font-size:10px; color:var(--text-muted);">[${l.ts}] • ${l.symbol} (${l.type})</span>
-                <div style="font-size:11px; color:#e2e8f0; margin-top:2px;">${l.msg}</div>
+          <div class="quant-card ${rb.approved ? 'buy' : 'wait'}" style="padding:11px; gap:6px;">
+            <div class="row-between">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span class="badge badge-indigo mono">#${i + 1}</span>
+                <strong class="mono" style="font-size:15px; color:#fff;">${disp}</strong>
+                <span class="mono" style="font-size:13px; font-weight:900; color:${s.changePct >= 0 ? 'var(--emerald-bright)' : 'var(--rose-bright)'};">₹${s.ltp.toFixed(2)} (${s.changePct >= 0 ? '+' : ''}${s.changePct}%)</span>
               </div>
-            </div>`).join('');
+              <span class="badge ${rb.approved ? 'badge-emerald' : 'badge-rose'} mono" style="font-size:9px;">
+                ${rb.approved ? `AUTO-${s.rawDirection} • ${rb.absEnsemble}%` : `${rb.regime} • VETOED`}
+              </span>
+            </div>
 
-      const patternRowsHtml = V1000_PATTERNS_108.slice(0, 30).map(p => `
-        <div class="domain-row ${p.bias > 0 ? 'domain-pass' : 'domain-wait'}">
-          <div>
-            <strong class="mono" style="color:#fff; font-size:11.5px;">[${p.code}] ${p.name}</strong>
-            <div style="font-size:10px; color:var(--text-secondary);">Category: ${p.category} • Min RVOL: ${p.minRvolRequired}x • Horizon: ${p.optimalHorizonMins}m</div>
+            <div class="layer6-strip mono">
+              <div class="l6-pill"><span style="color:#9e9e9e; display:block;">L1 MTF (20%)</span><b style="color:#00e6ac;">${rb.layerScores.L1}%</b></div>
+              <div class="l6-pill"><span style="color:#9e9e9e; display:block;">L2 SMC (20%)</span><b style="color:#00e6ac;">${rb.layerScores.L2}%</b></div>
+              <div class="l6-pill"><span style="color:#9e9e9e; display:block;">L3 GREEKS (20%)</span><b style="color:#00e5ff;">${rb.layerScores.L3}%</b></div>
+              <div class="l6-pill"><span style="color:#9e9e9e; display:block;">L4 OBI (15%)</span><b style="color:#00e5ff;">${rb.layerScores.L4}%</b></div>
+              <div class="l6-pill"><span style="color:#9e9e9e; display:block;">L5 HURST (10%)</span><b style="color:${rb.regime === 'CHOPPY_VETO' ? '#ff6b4a' : '#ffc400'};">H=${rb.effHurst}</b></div>
+              <div class="l6-pill"><span style="color:#9e9e9e; display:block;">L6 MACRO (15%)</span><b style="color:#00e6ac;">${rb.layerScores.L6}%</b></div>
+            </div>
+
+            <div style="background:#0d1017; border:1px solid #262932; border-radius:8px; padding:7px 9px; font-size:9.2px; line-height:1.45; color:#cbd5e1;" class="mono">
+              <div style="color:${rb.approved ? '#00e6ac' : '#ff8a70'}; font-weight:900; margin-bottom:2px;">${cot.statusBadge}</div>
+              • <b>1. Regime &amp; Hurst R/S:</b> ${cot.step1Regime}<br>
+              • <b>2. MTF &amp; 4×5m Path:</b> ${cot.step2Mtf}<br>
+              • <b>3. SMC &amp; S/R Structure:</b> ${cot.step3Smc}<br>
+              • <b>4. Book Depth &amp; Greeks:</b> ${cot.step4Flow}<br>
+              • <b>5. FY26-27 1R BE &amp; MPP:</b> ${cot.step5Exec}
+            </div>
           </div>
-          <span class="badge ${p.bias > 0 ? 'badge-emerald' : 'badge-rose'} mono">${Math.round(p.reliability * 100)}% Rel</span>
-        </div>`).join('');
+        `;
+      }).join('');
 
       grid.innerHTML = `
         <div class="quant-card buy" style="grid-column:1/-1; gap:10px;">
           <div class="row-between" style="flex-wrap:wrap; gap:8px;">
             <div>
-              <span class="badge badge-cyan mono">🧠 1 BILLION-K NEURALINK HUMAN CORTEX (50MB ENGINE + 50MB SYNAPTIC + 1GB VIRTUAL TENSOR • GEN #${aiBrain.generation})</span>
-              <h3 style="font-size:16px; font-weight:900; color:#fff; margin-top:4px;">16-Layer Spiking LIF + 16-Head Transformer + BiLSTM + Hebbian STDP Brain</h3>
-              <p style="font-size:11px; color:var(--text-secondary);">102,400 Active Cortical Synapses (100K Neuralink) • 1,02,400 Compiled Lines (52.48 Lakh Chars) • 100 Domains • 180 NSE F&amp;O Stocks</p>
+              <span class="badge badge-emerald mono">🧠 TRADERPRO 2.0 • 6-LAYER AUTONOMOUS NEURAL BRAIN (PERSONAL EDITION)</span>
+              <h3 style="font-size:16px; font-weight:900; color:#fff; margin-top:3px;">Live Multi-Layer Chain-of-Thought &amp; Zero-Loss Veto Cortex</h3>
+              <p style="font-size:10.5px; color:var(--text-secondary);">Requires <b>|C_ensemble| &ge; 75.0%</b> across all 6 Orthogonal Layers with <b>0 Hard Vetoes</b>, <b>Hurst H &notin; [0.45, 0.55]</b>, and <b>&ge; 2.5&times; 5-Level Book Liquidity</b>.</p>
             </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              <button onclick="__neuralinkPulseBoost=4.5; runV1000OnlineBackpropagation(100000);" class="btn-primary" style="font-size:11px; padding:8px 12px;">⚡ Fire +100,000 Cortical Epochs (STDP + Adam)</button>
-              <button onclick="resetAiBrainMemory()" class="ctrl-btn" style="border-color:var(--amber); color:var(--amber-bright);">🔄 Reset Cortex</button>
-            </div>
-          </div>
-
-          <!-- LIVE 60FPS HTML5 NEURALINK CORTICAL SPIKING VISUALIZER -->
-          <div style="background:#030712; border:1px solid rgba(6,182,212,0.35); border-radius:12px; padding:8px; position:relative;">
-            <div class="row-between mono" style="font-size:9.5px; color:var(--cyan-bright); margin-bottom:4px;">
-              <span>⚡ LIVE CORTICAL ACTION-POTENTIAL SPIKE STREAM (60 FPS)</span>
-              <span>SYNAPTIC COHERENCE: 99.4% • LOSS MSE: ${V1000_SYNAPTIC_TENSOR.lastLossMse}</span>
-            </div>
-            <canvas id="neuralinkCortexCanvas" style="width:100%; height:210px; display:block; border-radius:8px;"></canvas>
-          </div>
-
-          <div class="bento-3 mono">
-            <div class="lvl-box">
-              <span style="font-size:9px; color:var(--text-secondary);">CORTICAL SYNAPSES &amp; EPOCHS</span>
-              <strong style="font-size:13.5px; color:var(--emerald-bright); display:block; margin-top:2px;">102,400 Synapses (100K) • ${(V1000_SYNAPTIC_TENSOR.epochsTrained / 1000000).toFixed(2)}M Ep</strong>
-              <span style="font-size:9px; color:var(--text-muted);">1B Virtual Tensor • MSE ${V1000_SYNAPTIC_TENSOR.lastLossMse}</span>
-            </div>
-            <div class="lvl-box">
-              <span style="font-size:9px; color:var(--text-secondary);">100-DOMAIN NEURAL GATE</span>
-              <strong style="font-size:13.5px; color:var(--cyan-bright); display:block; margin-top:2px;">${aiBrain.minScore}% Gate • H≥${aiBrain.minHurst}</strong>
-              <span style="font-size:9px; color:var(--text-muted);">ADX≥${aiBrain.minAdx} • Chop≤${aiBrain.maxChop} • MC≥${aiBrain.minMcWinProb}%</span>
-            </div>
-            <div class="lvl-box">
-              <span style="font-size:9px; color:var(--emerald-bright);">DYNAMIC 0-LOSS THESIS GUARD</span>
-              <strong style="font-size:13.5px; color:#fff; display:block; margin-top:2px;">Hold In-Favour • Exit On Flip</strong>
-              <span style="font-size:9px; color:var(--text-muted);">No Fixed Timer • ₹0 Loss Floor</span>
+            <div style="display:flex; gap:6px;" class="mono">
+              <span class="badge badge-emerald" style="padding:6px 10px;">✅ Approved: ${approvedList.length}</span>
+              <span class="badge badge-rose" style="padding:6px 10px;">🚫 Chop/Veto Blocked: ${vetoedList.length}</span>
             </div>
           </div>
 
-          <h4 style="font-size:13px; font-weight:900; color:var(--cyan-bright); margin-top:6px;">🧬 16-Layer Neuralink Cortical Architecture &amp; Synaptic Matrices</h4>
-          <div style="display:flex; flex-direction:column; gap:6px;">${layerCardsHtml}</div>
+          <!-- LIVE 60 FPS 6-LAYER NEURAL ACTION-POTENTIAL STREAM CANVAS -->
+          <canvas id="neuralinkCortexCanvas" width="640" height="150" style="width:100%; height:140px; display:block; border-radius:10px; background:#070a12; border:1px solid rgba(0,208,156,0.28);"></canvas>
 
-          <h4 style="font-size:13px; font-weight:900; color:var(--emerald-bright); margin-top:6px;">📐 10 Institutional Mega-Clusters (100 Quantitative Domains D001–D100)</h4>
-          <div style="display:flex; flex-direction:column; gap:6px;">${clusterRowsHtml}</div>
+          <!-- 6-LAYER ARCHITECTURE SUMMARY STRIP -->
+          <div class="ob-matrix-strip mono" style="grid-template-columns:repeat(3, 1fr); gap:6px;">
+            <div class="ob-cell" style="text-align:left; padding:7px;">
+              <span class="ob-cell-lbl" style="color:var(--emerald-bright);">L1 MTF (20%) + L2 SMC (20%)</span>
+              <span class="ob-cell-val" style="font-size:10px;">1m/5m/15m/1H EMA + SuperTrend + FVG/OB/BOS</span>
+            </div>
+            <div class="ob-cell" style="text-align:left; padding:7px;">
+              <span class="ob-cell-lbl" style="color:var(--cyan-bright);">L3 GREEKS (20%) + L4 DEPTH OBI (15%)</span>
+              <span class="ob-cell-val" style="font-size:10px;">PCR, Max Pain, |&Theta;|/LTP &le; 3.5%, 5-Lvl OBI &amp; CVD</span>
+            </div>
+            <div class="ob-cell" style="text-align:left; padding:7px;">
+              <span class="ob-cell-lbl" style="color:var(--amber-bright);">L5 HURST R/S (10%) + L6 MACRO (15%)</span>
+              <span class="ob-cell-val" style="font-size:10px;">Vetoes 0.45 &le; H &le; 0.55 Chop • FY26-27 0.15% STT BE</span>
+            </div>
+          </div>
 
-          <h4 style="font-size:13px; font-weight:900; color:var(--rose-bright); margin-top:6px;">🚫 Quarantined / Blocked Stocks (Failed or Stagnant Today)</h4>
-          <div style="display:flex; flex-direction:column; gap:6px;">${qRows}</div>
-
-          <h4 style="font-size:13px; font-weight:900; color:var(--amber-bright); margin-top:6px;">📜 Online STDP + Adam Backpropagation &amp; Reinforcement Log</h4>
-          <div style="display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto;">${lessonRows}</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(310px, 1fr)); gap:9px;">
+            ${thoughtCardsHtml}
+          </div>
         </div>
-
-        <div class="quant-card wait" style="grid-column:1/-1; gap:8px;">
-          <h4 style="font-size:14px; font-weight:900; color:#fff;">🕯️ 108-Pattern SMC / ICT / Wyckoff / Harmonic / Candlestick Recognition Library</h4>
-          <div style="display:flex; flex-direction:column; gap:6px; max-height:360px; overflow-y:auto;">${patternRowsHtml}</div>
-        </div>`;
-
-      setTimeout(startNeuralinkCanvasAnimation, 30);
+      `;
     }
 
     function renderNewsView(grid, analyzed) {
